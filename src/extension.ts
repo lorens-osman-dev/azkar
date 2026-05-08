@@ -43,7 +43,7 @@ export default class AzkarExtension extends Extension {
     // 1. GNOME Shell adds it to the panel (which forces it to be visible)
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
-    // 2. FIX: Immediately apply our visibility logic AFTER it is mounted
+    // 2.  : Immediately apply our visibility logic AFTER it is mounted
     this._indicator.updateVisibility();
 
     // 4. LIVE LISTENER: React to the user toggling the switch in Adwaita Prefs
