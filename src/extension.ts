@@ -14,6 +14,9 @@ export default class AzkarExtension extends Extension {
   private _audioPlayer: InstanceType<typeof AudioPlayer> | null = null;
   private _randomizer: InstanceType<typeof SoundRandomizer> | null = null;
 
+  // Track the GSettings listener for memory-safe teardown
+  private _enabledSignalId: number = 0;
+
   override enable(): void {
     Logger.info("Initializing Azkar Audio Scheduler...");
 
@@ -29,14 +32,37 @@ export default class AzkarExtension extends Extension {
     this._indicator = new AzkarIndicator(this._audioPlayer, this._randomizer, this.path);
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
-    // 4. Check GSettings to see if we should auto-start on login/enable
+    // 4. LIVE LISTENER: React to the user toggling the switch in Adwaita Prefs
+    this._enabledSignalId = settings.connect('changed::scheduler-enabled', () => {
+      const isEnabled = settings.get_boolean("scheduler-enabled");
+      if (isEnabled) {
+        Logger.info("User toggled Preferences: ENABLED. Starting scheduler...");
+        this._randomizer?.restart();
+      } else {
+        Logger.info("User toggled Preferences: DISABLED. Halting scheduler and audio...");
+        this._randomizer?.stop();
+      }
+    });
+
+    // 5. Initial Boot Check
     if (settings.get_boolean("scheduler-enabled")) {
+      Logger.info("Extension loaded with scheduler ON. Starting...");
       this._randomizer.restart();
+    } else {
+      Logger.info("Extension loaded with scheduler OFF. Waiting for user interaction.");
     }
   }
 
   override disable(): void {
     Logger.info("Tearing down Azkar Extension...");
+
+    const settings = this.getSettings("org.gnome.shell.extensions.azkar");
+
+    // CLEANUP: Disconnect the GSettings signal to prevent memory leaks
+    if (this._enabledSignalId > 0) {
+      settings.disconnect(this._enabledSignalId);
+      this._enabledSignalId = 0;
+    }
 
     // UI Teardown
     if (this._indicator) {
