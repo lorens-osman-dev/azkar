@@ -1,4 +1,4 @@
-# Makefile — Light Todo GNOME Extension
+# Makefile — Azkar GNOME Extension
 #
 # Targets:
 #   make          → compile TypeScript → dist/
@@ -8,7 +8,7 @@
 #   make schema   → compile GSettings schema only
 #   make test     → launch nested Wayland GNOME Shell session for testing
 
-UUID      := light-todo@gjs.guide
+UUID      := azkar@gjs.guide
 DIST      := dist
 INSTALL   := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 TSC       := node_modules/.bin/tsc
@@ -29,7 +29,7 @@ $(DIST)/extension.js $(DIST)/prefs.js: src/extension.ts src/prefs.ts tsconfig.js
 .PHONY: schema
 schema: schemas/gschemas.compiled
 
-schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.light-todo.gschema.xml
+schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.azkar.gschema.xml
 	glib-compile-schemas schemas/
 
 # ── Install ───────────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ pack: build schema
 # GNOME 45-48: uses --nested
 #
 # After the window appears, open a terminal INSIDE it and run:
-#   gnome-extensions enable light-todo@gjs.guide
+#   gnome-extensions enable azkar@gjs.guide
 
 .PHONY: test
 test: install

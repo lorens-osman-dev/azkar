@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.light-todo"
-          path="/org/gnome/shell/extensions/light-todo/">
+  <schema id="org.gnome.shell.extensions.azkar"
+          path="/org/gnome/shell/extensions/azkar/">
 
     <key name="todos" type="as">
       <default>[]</default>

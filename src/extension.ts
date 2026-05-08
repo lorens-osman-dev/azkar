@@ -1,5 +1,5 @@
 /**
- * extension.ts — Light Todo GNOME Shell Extension
+ * extension.ts — Azkar GNOME Shell Extension
  */
 
 import GObject from "gi://GObject";
@@ -74,8 +74,8 @@ const TodoItem = GObject.registerClass(
 
 // ─── Panel Indicator ─────────────────────────────────────────────────────────
 
-const LightTodoIndicator = GObject.registerClass(
-  class LightTodoIndicator extends PanelMenu.Button {
+const AzkarIndicator = GObject.registerClass(
+  class AzkarIndicator extends PanelMenu.Button {
     private _settings: Gio.Settings;
     private _settingsChangedId: number = 0;
     private _todoSection!: PopupMenu.PopupMenuSection;
@@ -83,7 +83,7 @@ const LightTodoIndicator = GObject.registerClass(
     private _panelLabel!: St.Label;
 
     constructor(settings: Gio.Settings) {
-      super(0.0, "Light Todo", false);
+      super(0.0, "Azkar", false);
       this._settings = settings;
       this._buildPanel();
       this._buildMenu();
@@ -191,11 +191,11 @@ const LightTodoIndicator = GObject.registerClass(
 
 // ─── Extension Entry Point ───────────────────────────────────────────────────
 
-export default class LightTodoExtension extends Extension {
-  private _indicator: InstanceType<typeof LightTodoIndicator> | null = null;
+export default class AzkarExtension extends Extension {
+  private _indicator: InstanceType<typeof AzkarIndicator> | null = null;
 
   override enable(): void {
-    this._indicator = new LightTodoIndicator(this.getSettings() as unknown as import("gi://Gio").default.Settings);
+    this._indicator = new AzkarIndicator(this.getSettings() as unknown as import("gi://Gio").default.Settings);
     Main.panel.addToStatusArea(this.uuid, this._indicator);
   }
 
@@ -209,5 +209,5 @@ export default class LightTodoExtension extends Extension {
  * A custom logger that automatically prepends the extension name.
  */
 function log(message: string): void {
-  console.log(`LightTodo: ${message}`);
+  console.log(`Azkar: ${message}`);
 }

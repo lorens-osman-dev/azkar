@@ -1,5 +1,5 @@
 /**
- * prefs.ts — Light Todo Preferences
+ * prefs.ts — Azkar Preferences
  *
  * Runs in a separate GTK4/Adwaita process.
  * Debug: journalctl -f -o cat /usr/bin/gjs
@@ -10,7 +10,7 @@ import Gtk from "gi://Gtk";
 import Gio from "gi://Gio";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
-export default class LightTodoPreferences extends ExtensionPreferences {
+export default class AzkarPreferences extends ExtensionPreferences {
 
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
     const settings = this.getSettings();
@@ -25,7 +25,7 @@ export default class LightTodoPreferences extends ExtensionPreferences {
     // ── Group: Appearance ───────────────────────────────────────────────────
     const appearanceGroup = new Adw.PreferencesGroup({
       title: "Appearance",
-      description: "Configure how Light Todo appears in your panel",
+      description: "Configure how Azkar appears in your panel",
     });
     page.add(appearanceGroup);
 
@@ -103,7 +103,7 @@ export default class LightTodoPreferences extends ExtensionPreferences {
     });
     window.add(aboutPage);
 
-    const aboutGroup = new Adw.PreferencesGroup({ title: "Light Todo" });
+    const aboutGroup = new Adw.PreferencesGroup({ title: "Azkar" });
     aboutPage.add(aboutGroup);
     aboutGroup.add(new Adw.ActionRow({ title: "Version", subtitle: "1.0.0" }));
     aboutGroup.add(new Adw.ActionRow({ title: "Author", subtitle: "Your Name" }));

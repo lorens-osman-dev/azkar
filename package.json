@@ -1,5 +1,5 @@
 {
-  "name": "light-todo",
+  "name": "azkar",
   "version": "1.0.0",
   "type": "module",
   "description": "A lightweight GNOME Shell todo extension",
@@ -7,7 +7,7 @@
     "build": "make build",
     "pack": "make pack",
     "install": "make install",
-    "test": "make test 2>&1 | grep --color=always --line-buffered \"LightTodo\"",
+    "test": "make test 2>&1 | grep --color=always --line-buffered \"Azkar\"",
     "clean": "make clean"
   },
   "devDependencies": {

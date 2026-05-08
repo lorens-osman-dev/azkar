@@ -1,13 +1,13 @@
 {
-  "name": "Light Todo",
+  "name": "Azkar",
   "description": "A lightweight, distraction-free todo list in your GNOME panel",
-  "uuid": "light-todo@gjs.guide",
+  "uuid": "azkar@gjs.guide",
   "shell-version": [
     "45",
     "46",
     "47"
   ],
-  "url": "https://github.com/yourname/light-todo",
-  "settings-schema": "org.gnome.shell.extensions.light-todo",
-  "gettext-domain": "light-todo@gjs.guide"
+  "url": "https://github.com/yourname/azkar",
+  "settings-schema": "org.gnome.shell.extensions.azkar",
+  "gettext-domain": "azkar@gjs.guide"
 }
