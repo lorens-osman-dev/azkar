@@ -2,6 +2,13 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.azkar"
           path="/org/gnome/shell/extensions/azkar/">
-
+    <key name="scheduler-enabled" type="b">
+      <default>false</default>
+      <summary>Enable automatic scheduler</summary>
+    </key>
+    <key name="scheduler-period" type="i">
+      <default>60</default>
+      <summary>Playback interval in minutes</summary>
+    </key>
   </schema>
 </schemalist>

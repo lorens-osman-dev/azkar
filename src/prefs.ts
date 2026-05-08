@@ -1,39 +1,73 @@
 /**
  * prefs.ts — Azkar Preferences
- *
  * Runs in a separate GTK4/Adwaita process.
- * Debug: journalctl -f -o cat /usr/bin/gjs
  */
 
 import Adw from "gi://Adw";
+import Gio from "gi://Gio";
+import Gtk from "gi://Gtk";
+import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
 export default class AzkarPreferences extends ExtensionPreferences {
-  /**
-   * Populates the Adwaita Preferences Window.
-   */
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
+    const settings = this.getSettings("org.gnome.shell.extensions.azkar");
 
-    // ─── Page: General ───
     const page = new Adw.PreferencesPage({
       title: "General",
       icon_name: "preferences-system-symbolic",
     });
     window.add(page);
 
-    // ─── Group: Status ───
-    const statusGroup = new Adw.PreferencesGroup({
-      title: "Extension Status",
-      description: "GNOME 45+ Adwaita Preferences",
+    // ─── Group: Scheduler ───
+    const schedulerGroup = new Adw.PreferencesGroup({
+      title: "Audio Scheduler",
+      description: "Manage randomized playback intervals.",
     });
-    page.add(statusGroup);
+    page.add(schedulerGroup);
 
-    // ─── Row: Hello World ───
-    const helloRow = new Adw.ActionRow({
-      title: "Hello from Azkar",
-      subtitle: "The user interface has been successfully reset.",
+    // ─── Row: Enable Toggle ───
+    const enableRow = new Adw.SwitchRow({
+      title: "Enable Automatic Reminders",
+      subtitle: "Starts or stops the random audio scheduler.",
     });
-    statusGroup.add(helloRow);
+
+    // FIX 2: Cast enableRow to satisfy gi-ts strict object inheritance missing the GJS 'connectObject' patch
+    settings.bind(
+      "scheduler-enabled",
+      enableRow as any,
+      "active",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+    schedulerGroup.add(enableRow);
+
+    // ─── Row: Interval Dropdown ───
+    const periods = [1, 5, 10, 15, 30, 60];
+    const periodLabels = ["1 Minute", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes", "1 Hour"];
+
+    // FIX 1: Use GTK4's native StringList for optimized memory management
+    const model = Gtk.StringList.new(periodLabels);
+
+    const intervalRow = new Adw.ComboRow({
+      title: "Playback Interval",
+      subtitle: "Time between reminders.",
+      model: model,
+    });
+
+    // Synchronize UI dropdown with current GSettings value
+    const currentPeriod = settings.get_int("scheduler-period");
+    const currentIndex = periods.indexOf(currentPeriod);
+    if (currentIndex !== -1) {
+      intervalRow.selected = currentIndex;
+    }
+
+    // Listen for UI changes and update GSettings
+    intervalRow.connect("notify::selected", () => {
+      const selectedMinutes = periods[intervalRow.selected];
+      settings.set_int("scheduler-period", selectedMinutes);
+    });
+
+    schedulerGroup.add(intervalRow);
 
     return Promise.resolve();
   }
