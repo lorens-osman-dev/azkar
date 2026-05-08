@@ -1,38 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter color-interpolation-filters="sRGB" x="-248" y="-248" width="250" height="250" id="filter_1">
-      <feFlood flood-opacity="0" result="BackgroundImageFix_1" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" in="SourceAlpha" />
-      <feMorphology radius="1" operator="dilate" in="SourceAlpha" />
-      <feOffset dx="0" dy="2" />
-      <feGaussianBlur stdDeviation="2.5" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0.196 0 0 0 0 0.196 0 0 0 0 0.365 0 0 0 0.251 0" />
-      <feBlend mode="normal" in2="BackgroundImageFix_1" result="Shadow_2" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" in="SourceAlpha" />
-      <feMorphology radius="1" operator="dilate" in="SourceAlpha" />
-      <feOffset dx="0" dy="1" />
-      <feGaussianBlur stdDeviation="1.5" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.298 0" />
-      <feBlend mode="normal" in2="Shadow_2" result="Shadow_3" />
-      <feBlend mode="normal" in="SourceGraphic" in2="Shadow_3" result="Shape_4" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" in="SourceAlpha" result="HardAlpha_5" />
-      <feOffset dx="0" dy="1" />
-      <feComposite operator="arithmetic" k2="-1" k3="1" in2="HardAlpha_5" />
-      <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.078 0" />
-      <feBlend mode="normal" in2="Shape_4" result="InnerShadow_6" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" in="SourceAlpha" result="HardAlpha_7" />
-      <feMorphology radius="1" operator="erode" in="SourceAlpha" />
-      <feOffset dx="0" dy="0" />
-      <feComposite operator="arithmetic" k2="-1" k3="1" in2="HardAlpha_7" />
-      <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.039 0" />
-      <feBlend mode="normal" in2="InnerShadow_6" result="InnerShadow_8" />
-    </filter>
-  </defs>
   <g>
-    <g fill="#CEF2D6" filter="url(#filter_1)" transform="matrix(-1 -0 0 -1 275 274)">
+    <g fill="#CEF2D6" transform="matrix(-1 -0 0 -1 275 274)">
       <path d="M50 0L200 0C227.618 0 250 22.382 250 50L250 200C250 227.618 227.618 250 200 250L50 250C22.382 250 0 227.618 0 200L0 50C0 22.382 22.382 0 50 0L50 0Z" />
-      <path d="M200 0L50 0C22.382 0 0 22.382 0 50L0 200C0 227.618 22.382 250 50 250L200 250C227.618 250 250 227.618 250 200L250 50C250 22.382 227.618 0 200 0ZM15.3503 15.3503Q29.7007 1 50.0001 1L200 1Q220.299 1 234.65 15.3503Q249 29.7002 249 50.0001L249 200Q249 220.299 234.65 234.65Q220.299 249 200 249L50 249Q29.7002 249 15.3503 234.65Q1 220.299 1 200L1 50Q1 29.7007 15.3503 15.3503Z" fill="#FFFFFF" fill-rule="evenodd" />
+      <path d="M200 0L50 0C22.382 0 0 22.382 0 50L0 200C0 227.618 22.382 250 50 250L200 250C227.618 250 250 227.618 250 200L250 50C250 22.382 227.618 0 200 0ZM16.7646 16.7646Q30.5291 3 50.0001 3L200 3Q219.471 3 233.235 16.7646Q247 30.5292 247 50.0001L247 200Q247 219.471 233.235 233.235Q219.471 247 200 247L50 247Q30.5291 247 16.7646 233.235Q3 219.471 3 200L3 50Q3 30.5292 16.7646 16.7646Z" fill="#FFFFFF" fill-rule="evenodd" />
     </g>
     <path d="M50 0L200 0C227.618 0 250 22.382 250 50L250 125L0 125L0 50C0 22.382 22.382 0 50 0L50 0Z" fill="#FFFFFF" fill-opacity="0.749" transform="translate(25 25)" />
     <path d="M18.5316 16.0829L0.162422 58.08L14.5618 58.08L17.3784 50.7558L33.3517 50.7558L36.1683 58.08L50.8021 58.08L32.4476 16.0829L18.5316 16.0829ZM29.4311 40.5605L21.299 40.5605L25.3651 29.987L29.4311 40.5605ZM51.5839 49.3788L51.5839 58.08L90.1679 58.08L90.1679 47.0937L70.0358 47.0937L89.2011 24.7841L89.2011 16.0829L52.1845 16.0829L52.1845 27.0546L70.7739 27.0546L51.5839 49.3788ZM94.2981 16.0829L94.2981 58.08L108.229 58.08L108.229 47.6857L111.381 44.1822L121.91 58.08L138.287 58.08L120.644 34.5814L137.438 16.0829L122.028 16.0829L108.229 31.2846L108.229 16.0829L94.2981 16.0829ZM151.912 16.0829L133.542 58.08L147.942 58.08L150.758 50.7558L166.732 50.7558L169.548 58.08L184.182 58.08L165.828 16.0829L151.912 16.0829ZM162.811 40.5605L154.679 40.5605L158.745 29.987L162.811 40.5605ZM186.458 16.0829L186.458 58.08L200.623 58.08L200.623 47.5185L204.477 47.5185L211.609 58.08L226.727 58.08L217.905 45.1628Q221.439 43.3563 223.475 40.2968Q225.818 36.7812 225.818 31.9179Q225.818 24.5937 220.779 20.3456Q215.74 16.0829 206.087 16.0829L186.458 16.0829ZM200.623 36.8398L200.623 26.996L205.779 26.996Q208.724 26.996 210.13 28.3144Q211.551 29.6327 211.551 31.9179Q211.551 34.203 210.13 35.5214Q208.724 36.8398 205.779 36.8398L200.623 36.8398Z" fill="#006D6C" transform="translate(36 112)" />
