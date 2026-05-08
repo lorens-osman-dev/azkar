@@ -9,6 +9,7 @@
 #   make test     → launch nested Wayland GNOME Shell session for testing
 
 UUID      := azkar@lorens.com
+EXTENSION_NAME := Azkar
 DIST      := dist
 INSTALL   := $(HOME)/.local/share/gnome-shell/extensions/$(UUID)
 TSC       := node_modules/.bin/tsc
@@ -88,7 +89,7 @@ test: install
 	@echo ""
 	MUTTER_DEBUG_DUMMY_MODE_SPECS="1280x720" \
 	G_MESSAGES_DEBUG=all \
-	dbus-run-session gnome-shell --nested --wayland 2>&1 | grep  --line-buffered "Azkar"
+	dbus-run-session gnome-shell --nested --wayland 2>&1 | grep  --line-buffered "$(EXTENSION_NAME)"
 
 # For GNOME 49+, use devkit instead:
 .PHONY: test-devkit
@@ -99,8 +100,17 @@ test-devkit: install
 	@echo ""
 	MUTTER_DEBUG_DUMMY_MODE_SPECS="1280x720" \
 	G_MESSAGES_DEBUG=all \
-	dbus-run-session gnome-shell --devkit --wayland 2>&1 | grep  --line-buffered "Azkar"
+	dbus-run-session gnome-shell --devkit --wayland 2>&1 | grep  --line-buffered "$(EXTENSION_NAME)"
 
+.PHONY: testAndLog
+testAndLog: install
+	@echo "🚀  Starting nested GNOME Shell (Wayland)…"
+	@echo "    Inside the new window, run:"
+	@echo "    gnome-extensions enable $(UUID)"
+	@echo ""
+	MUTTER_DEBUG_DUMMY_MODE_SPECS="1280x720" \
+	G_MESSAGES_DEBUG=all \
+	dbus-run-session  gnome-shell --nested --wayland 2>&1 | grep -E --line-buffered "$(EXTENSION_NAME)|GStreamer|gjs"
 # ── Logs ──────────────────────────────────────────────────────────────────────
 
 .PHONY: logs
