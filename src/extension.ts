@@ -20,6 +20,7 @@ export default class AzkarExtension extends Extension {
   override enable(): void {
     Logger.info("Initializing Azkar Audio Scheduler...");
 
+
     const settings = this.getSettings("org.gnome.shell.extensions.azkar");
 
     // 1. Initialize Pipeline
@@ -35,10 +36,15 @@ export default class AzkarExtension extends Extension {
       this.path,
       () => {
         Logger.info("Right-click detected. Opening Azkar Preferences...");
-        this.openPreferences(); // Native GNOME 45+ Extension API
-      }
+        this.openPreferences();
+      },
+      settings
     );
+    // 1. GNOME Shell adds it to the panel (which forces it to be visible)
     Main.panel.addToStatusArea(this.uuid, this._indicator);
+
+    // 2. FIX: Immediately apply our visibility logic AFTER it is mounted
+    this._indicator.updateVisibility();
 
     // 4. LIVE LISTENER: React to the user toggling the switch in Adwaita Prefs
     this._enabledSignalId = settings.connect('changed::scheduler-enabled', () => {

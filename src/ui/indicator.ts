@@ -24,11 +24,27 @@ export const AzkarIndicator = GObject.registerClass(
 
     private _stoppedSignalId: number;
     private _buttonPressSignalId: number;
+
+    private _settings: Gio.Settings;
+    private _isIdle: boolean = true;
+    private _settingsSignalId: number;
+
+    public updateVisibility(): void {
+      const hideWhenIdle = this._settings.get_boolean("hide-indicator-idle");
+      if (this._isIdle && hideWhenIdle) {
+        this.hide(); // Clutter native hide
+      } else {
+        this.show(); // Clutter native show
+      }
+    }
+
+
     constructor(
       audioPlayer: InstanceType<typeof AudioPlayer>,
       randomizer: InstanceType<typeof SoundRandomizer>,
       extensionPath: string,
-      openPrefsCallback: () => void
+      openPrefsCallback: () => void,
+      settings: Gio.Settings
     ) {
       super(0.0, "AzkarIndicator", false);
 
@@ -36,6 +52,7 @@ export const AzkarIndicator = GObject.registerClass(
       this._randomizer = randomizer;
       this._extensionPath = extensionPath;
       this._openPrefsCallback = openPrefsCallback;
+      this._settings = settings;
 
       this._buildUI();
 
@@ -45,10 +62,17 @@ export const AzkarIndicator = GObject.registerClass(
       // Listen to AudioPlayer for unexpected stops (e.g., user manual stop)
       this._stoppedSignalId = this._audioPlayer.connect('playback-stopped', this._onPlaybackStopped.bind(this));
 
-      // FIX: Bind the Clutter scene graph pointer event to detect right-clicks
+      //: Bind the Clutter scene graph pointer event to detect right-clicks
       this._buttonPressSignalId = this.connect('button-press-event', this._onButtonPress.bind(this));
 
+      // Listen to live setting changes to update visibility immediately
+      this._settingsSignalId = this._settings.connect('changed::hide-indicator-idle', () => {
+        this.updateVisibility();
+      });
+
     }
+
+
 
     /**
      * Intercepts pointer clicks before the panel menu processes them.
@@ -98,6 +122,8 @@ export const AzkarIndicator = GObject.registerClass(
     // ─── State Transitions ───
 
     public onPreActive(sound: SoundEntry, timeUntilPlay: number): void {
+      this._isIdle = false;
+      this.updateVisibility(); // Show the indicator
       this._clearTimers();
       this._resetStyles();
 
@@ -120,6 +146,8 @@ export const AzkarIndicator = GObject.registerClass(
     }
 
     public onSoundStarted(sound: SoundEntry): void {
+      this._isIdle = false;
+      this.updateVisibility(); // Show the indicator
       this._clearTimers();
       this._resetStyles();
 
@@ -159,6 +187,8 @@ export const AzkarIndicator = GObject.registerClass(
     // ─── Memory Safety & Teardown ───
 
     private _returnToIdle(): void {
+      this._isIdle = true;
+      this.updateVisibility(); // Hide if preferences dictate
       this._clearTimers();
       this._resetStyles();
       this._timerLabel.visible = false;
@@ -199,14 +229,14 @@ export const AzkarIndicator = GObject.registerClass(
     override destroy(): void {
       // CLEANUP: Disconnect all signals
       this._clearTimers();
-      if (this._stoppedSignalId) {
-        this._audioPlayer.disconnect(this._stoppedSignalId);
-      }
-      //  : Teardown the pointer intercept signal
-      if (this._buttonPressSignalId) {
-        this.disconnect(this._buttonPressSignalId);
-      }
+      if (this._stoppedSignalId) this._audioPlayer.disconnect(this._stoppedSignalId);
+      if (this._buttonPressSignalId) this.disconnect(this._buttonPressSignalId);
+
+      // NEW: Memory safe teardown of GSettings listener
+      if (this._settingsSignalId) this._settings.disconnect(this._settingsSignalId);
+
       super.destroy();
     }
+
   }
 );

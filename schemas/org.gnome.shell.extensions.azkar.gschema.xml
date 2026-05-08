@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.gnome.shell.extensions.azkar"
-          path="/org/gnome/shell/extensions/azkar/">
+  <schema id="org.gnome.shell.extensions.azkar" path="/org/gnome/shell/extensions/azkar/">
     <key name="scheduler-enabled" type="b">
-      <default>false</default>
+      <default>true</default>
       <summary>Enable automatic scheduler</summary>
     </key>
     <key name="scheduler-period" type="i">
-      <default>60</default>
+      <default>15</default>
       <summary>Playback interval in minutes</summary>
+    </key>
+
+    <key name="hide-indicator-idle" type="b">
+      <default>false</default>
+      <summary>Hide indicator when idle</summary>
+      <description>Hides the top panel icon when no audio is playing or scheduled to play soon.</description>
     </key>
   </schema>
 </schemalist>

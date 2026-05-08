@@ -70,6 +70,21 @@ export default class AzkarPreferences extends ExtensionPreferences {
 
     schedulerGroup.add(intervalRow);
 
+    // ─── Row: Hide Indicator Toggle ───
+    const hideIdleRow = new Adw.SwitchRow({
+      title: "Hide Indicator When Idle",
+      subtitle: "Only show the top panel icon during countdowns and playback.",
+    });
+
+    // Cast to GObject.Object to satisfy gi-ts strict typing
+    settings.bind(
+      "hide-indicator-idle",
+      hideIdleRow as any,
+      "active",
+      Gio.SettingsBindFlags.DEFAULT
+    );
+    schedulerGroup.add(hideIdleRow);
+
     return Promise.resolve();
   }
 }
