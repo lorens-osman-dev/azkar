@@ -7,6 +7,8 @@
 
 import GObject from "gi://GObject";
 import St from "gi://St";
+import Gio from "gi://Gio";
+import GLib from "gi://GLib";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
 import * as PopupMenu from "resource:///org/gnome/shell/ui/popupMenu.js";
 import { AudioPlayer } from "../core/audioPlayer.js";
@@ -19,29 +21,25 @@ export const AzkarIndicator = GObject.registerClass(
     private _playStopItem!: PopupMenu.PopupMenuItem;
     private _icon!: St.Icon;
 
-    // Fix: Use InstanceType to derive the type from the registered GObject class
     private _audioPlayer: InstanceType<typeof AudioPlayer>;
+    private _extensionPath: string;
     private _isPlaying: boolean = false;
 
-    // Explicit signal tracking for memory cleanup
     private _startedSignalId: number;
     private _stoppedSignalId: number;
 
-    constructor(audioPlayer: InstanceType<typeof AudioPlayer>) {
-      // Initialize the PanelMenu.Button with:
-      // 0.0 (alignment), "AzkarIndicator" (name for accessibility), false (create menu immediately)
+    constructor(audioPlayer: InstanceType<typeof AudioPlayer>, extensionPath: string) {
       super(0.0, "AzkarIndicator", false);
 
       this._audioPlayer = audioPlayer;
+      this._extensionPath = extensionPath;
 
       this._buildUI();
       this._buildMenu();
 
-      // Bind UI state to low-level multimedia playback state transitions
       this._startedSignalId = this._audioPlayer.connect('playback-started', this._onPlaybackStarted.bind(this));
       this._stoppedSignalId = this._audioPlayer.connect('playback-stopped', this._onPlaybackStopped.bind(this));
     }
-
     /**
      * Constructs the panel icon.
      */
@@ -50,10 +48,16 @@ export const AzkarIndicator = GObject.registerClass(
         style_class: "panel-status-menu-box",
       });
 
-      // We use a built-in Adwaita symbolic icon related to audio playback
+      // UPDATE: Target the -symbolic.svg asset so Clutter creates a recolorable mask
+      const iconPath = GLib.build_filenamev([this._extensionPath, "assets", "moon-symbolic.svg"]);
+      const iconFile = Gio.File.new_for_path(iconPath);
+
+      const gicon = new Gio.FileIcon({ file: iconFile });
+
       this._icon = new St.Icon({
-        icon_name: "audio-headphones-symbolic",
-        style_class: "system-status-icon",
+        gicon: gicon as any,
+        // UPDATE: Use our custom base CSS class
+        style_class: "system-status-icon azkar-indicator-icon",
       });
 
       box.add_child(this._icon);
@@ -94,8 +98,8 @@ export const AzkarIndicator = GObject.registerClass(
       this._playStopItem.label.text = "Stop Salat Reminder";
       this._statusItem.label.text = "Status: Playing audio...";
 
-      // Inline styling to provide a Wayland-native Adwaita success green tint
-      this._icon.set_style('color: #2ec27e;');
+      // CSS STATE: Add the active class to tint the icon green
+      this._icon.add_style_class_name('azkar-indicator-icon-active');
     }
 
     private _onPlaybackStopped(): void {
@@ -103,8 +107,8 @@ export const AzkarIndicator = GObject.registerClass(
       this._playStopItem.label.text = "Play Salat Reminder";
       this._statusItem.label.text = "Status: Waiting for schedule...";
 
-      // Revert the icon back to default panel styling
-      this._icon.set_style('');
+      // CSS STATE: Remove the active class to revert to panel default
+      this._icon.remove_style_class_name('azkar-indicator-icon-active');
     }
 
     /**

@@ -1,2 +1,11 @@
 /* stylesheet.css — Azkar Extension
  */
+/* Base state: Adapts automatically to the user's Light/Dark mode panel text color */
+.azkar-indicator-icon {
+    /* No explicit color needed; inherits GNOME Shell's default foreground */
+}
+
+/* Active state: Applies Adwaita Native Success Green during playback */
+.azkar-indicator-icon-active {
+    color: #2ec27e;
+}

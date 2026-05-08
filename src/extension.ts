@@ -21,8 +21,8 @@ export default class AzkarExtension extends Extension {
     // Instantiate the GStreamer audio manager and pass the base extension path
     this._audioPlayer = new AudioPlayer(this.path);
 
-    // Instantiate and inject the indicator into the GNOME top panel
-    this._indicator = new AzkarIndicator(this._audioPlayer);
+    // Instantiate and inject the indicator into the GNOME top panel, passing the path
+    this._indicator = new AzkarIndicator(this._audioPlayer, this.path);
     Main.panel.addToStatusArea(this.uuid, this._indicator);
   }
 
