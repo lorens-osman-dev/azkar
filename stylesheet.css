@@ -28,6 +28,13 @@
 .azkar-indicator-timer {
     font-size: 0.9em;
     font-weight: bold;
-    /* Force monospaced tabular numbers to prevent UI jittering during countdown */
     font-feature-settings: "tnum";
+    min-width: 22px; /* Reserves exactly enough space for two digits */
+    text-align: center; /* Ensures a single digit stays centered in the reserved space */
+}
+
+
+.azkar-indicator-active-pill {
+    background-color: rgba(255, 255, 255, 0.12); /* Standard GNOME panel hover tint */
+    border-radius: 99px; /* Pill shape */
 }

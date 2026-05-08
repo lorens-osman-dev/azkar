@@ -58,12 +58,13 @@ export const AzkarIndicator = GObject.registerClass(
         style_class: "system-status-icon azkar-indicator-icon",
       });
 
-      // Implement the numeric timer label per specs
       this._timerLabel = new St.Label({
         text: "",
         y_align: Clutter.ActorAlign.CENTER,
+        // FIX 1: Force Clutter to center the text within the CSS min-width bounds
+        x_align: Clutter.ActorAlign.CENTER,
         style_class: "azkar-indicator-timer",
-        visible: false, // Hidden in Idle state
+        visible: false,
       });
 
       box.add_child(this._icon);
@@ -80,9 +81,11 @@ export const AzkarIndicator = GObject.registerClass(
       let timeLeft = timeUntilPlay;
       this._timerLabel.text = `${timeLeft}`;
       this._timerLabel.visible = true;
+
+      // FIX 2: Apply the persistent hover pill background
+      this.add_style_class_name('azkar-indicator-active-pill');
       this._icon.add_style_class_name('azkar-indicator-icon-pre-active');
 
-      // Pre-active 10s countdown
       this._preActiveTimerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
         timeLeft -= 1;
         if (timeLeft > 0) {
@@ -97,19 +100,19 @@ export const AzkarIndicator = GObject.registerClass(
       this._clearTimers();
       this._resetStyles();
 
+      // FIX 2: Keep the persistent hover pill background during playback
+      this.add_style_class_name('azkar-indicator-active-pill');
       this._icon.add_style_class_name('azkar-indicator-icon-active');
       this._timerLabel.visible = true;
 
-      // Active state duration polling
       this._playbackTimerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
         const remaining = this._audioPlayer.getRemainingTime();
 
         if (remaining > 0) {
           this._timerLabel.text = `${remaining}`;
         } else if (remaining === -1) {
-          this._timerLabel.text = "?"; // GStreamer recovery/fallback
+          this._timerLabel.text = "?";
         } else {
-          // If 0, audio is finishing up. We let 'playback-stopped' handle the state teardown.
           this._timerLabel.text = "0";
         }
 
@@ -140,6 +143,8 @@ export const AzkarIndicator = GObject.registerClass(
     }
 
     private _resetStyles(): void {
+      // FIX 2: Strip the custom hover background when returning to the idle state
+      this.remove_style_class_name('azkar-indicator-active-pill');
       this._icon.remove_style_class_name('azkar-indicator-icon-pre-active');
       this._icon.remove_style_class_name('azkar-indicator-icon-active');
     }
