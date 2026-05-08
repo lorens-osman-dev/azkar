@@ -33,7 +33,7 @@ export default class AzkarPreferences extends ExtensionPreferences {
       subtitle: "Starts or stops the random audio scheduler.",
     });
 
-    // FIX 2: Cast enableRow to satisfy gi-ts strict object inheritance missing the GJS 'connectObject' patch
+    //   2: Cast enableRow to satisfy gi-ts strict object inheritance missing the GJS 'connectObject' patch
     settings.bind(
       "scheduler-enabled",
       enableRow as any,
@@ -46,7 +46,7 @@ export default class AzkarPreferences extends ExtensionPreferences {
     const periods = [1, 5, 10, 15, 30, 60];
     const periodLabels = ["1 Minute", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes", "1 Hour"];
 
-    // FIX 1: Use GTK4's native StringList for optimized memory management
+    //   1: Use GTK4's native StringList for optimized memory management
     const model = Gtk.StringList.new(periodLabels);
 
     const intervalRow = new Adw.ComboRow({

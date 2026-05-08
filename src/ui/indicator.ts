@@ -17,22 +17,25 @@ export const AzkarIndicator = GObject.registerClass(
     private _audioPlayer: InstanceType<typeof AudioPlayer>;
     private _randomizer: InstanceType<typeof SoundRandomizer>;
     private _extensionPath: string;
+    private _openPrefsCallback: () => void;
 
     private _preActiveTimerId: number | null = null;
     private _playbackTimerId: number | null = null;
 
     private _stoppedSignalId: number;
-
+    private _buttonPressSignalId: number;
     constructor(
       audioPlayer: InstanceType<typeof AudioPlayer>,
       randomizer: InstanceType<typeof SoundRandomizer>,
-      extensionPath: string
+      extensionPath: string,
+      openPrefsCallback: () => void
     ) {
       super(0.0, "AzkarIndicator", false);
 
       this._audioPlayer = audioPlayer;
       this._randomizer = randomizer;
       this._extensionPath = extensionPath;
+      this._openPrefsCallback = openPrefsCallback;
 
       this._buildUI();
 
@@ -41,6 +44,26 @@ export const AzkarIndicator = GObject.registerClass(
 
       // Listen to AudioPlayer for unexpected stops (e.g., user manual stop)
       this._stoppedSignalId = this._audioPlayer.connect('playback-stopped', this._onPlaybackStopped.bind(this));
+
+      // FIX: Bind the Clutter scene graph pointer event to detect right-clicks
+      this._buttonPressSignalId = this.connect('button-press-event', this._onButtonPress.bind(this));
+
+    }
+
+    /**
+     * Intercepts pointer clicks before the panel menu processes them.
+     */
+    private _onButtonPress(_actor: unknown, event: Clutter.Event): boolean {
+      // Button 3 is the universal Clutter definition for a secondary click (Right-Click)
+      if (event.get_button() === 3) {
+        this._openPrefsCallback();
+
+        // Return EVENT_STOP (true) so the left-click dropdown menu doesn't open
+        return Clutter.EVENT_STOP;
+      }
+
+      // Return EVENT_PROPAGATE (false) to allow normal left-clicks to open the dropdown
+      return Clutter.EVENT_PROPAGATE;
     }
 
     private _buildUI(): void {
@@ -61,7 +84,7 @@ export const AzkarIndicator = GObject.registerClass(
       this._timerLabel = new St.Label({
         text: "",
         y_align: Clutter.ActorAlign.CENTER,
-        // FIX 1: Force Clutter to center the text within the CSS min-width bounds
+        //   1: Force Clutter to center the text within the CSS min-width bounds
         x_align: Clutter.ActorAlign.CENTER,
         style_class: "azkar-indicator-timer",
         visible: false,
@@ -82,7 +105,7 @@ export const AzkarIndicator = GObject.registerClass(
       this._timerLabel.text = `${timeLeft}`;
       this._timerLabel.visible = true;
 
-      // FIX 2: Apply the persistent hover pill background
+      //   2: Apply the persistent hover pill background
       this.add_style_class_name('azkar-indicator-active-pill');
       this._icon.add_style_class_name('azkar-indicator-icon-pre-active');
 
@@ -100,7 +123,7 @@ export const AzkarIndicator = GObject.registerClass(
       this._clearTimers();
       this._resetStyles();
 
-      // FIX 2: Keep the persistent hover pill background during playback
+      //   2: Keep the persistent hover pill background during playback
       this.add_style_class_name('azkar-indicator-active-pill');
       this._icon.add_style_class_name('azkar-indicator-icon-active');
       this._timerLabel.visible = true;
@@ -143,7 +166,7 @@ export const AzkarIndicator = GObject.registerClass(
     }
 
     private _resetStyles(): void {
-      // FIX 2: Strip the custom hover background when returning to the idle state
+      //   2: Strip the custom hover background when returning to the idle state
       this.remove_style_class_name('azkar-indicator-active-pill');
       this._icon.remove_style_class_name('azkar-indicator-icon-pre-active');
       this._icon.remove_style_class_name('azkar-indicator-icon-active');
@@ -174,10 +197,14 @@ export const AzkarIndicator = GObject.registerClass(
     }
 
     override destroy(): void {
-      // CLEANUP: Drop all GLib sources and GObject signals
+      // CLEANUP: Disconnect all signals
       this._clearTimers();
       if (this._stoppedSignalId) {
         this._audioPlayer.disconnect(this._stoppedSignalId);
+      }
+      //  : Teardown the pointer intercept signal
+      if (this._buttonPressSignalId) {
+        this.disconnect(this._buttonPressSignalId);
       }
       super.destroy();
     }

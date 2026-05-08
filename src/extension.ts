@@ -29,7 +29,15 @@ export default class AzkarExtension extends Extension {
     this._randomizer = new SoundRandomizer(this._audioPlayer, this.path, settings);
 
     // 3. Initialize UI and inject dependencies
-    this._indicator = new AzkarIndicator(this._audioPlayer, this._randomizer, this.path);
+    this._indicator = new AzkarIndicator(
+      this._audioPlayer,
+      this._randomizer,
+      this.path,
+      () => {
+        Logger.info("Right-click detected. Opening Azkar Preferences...");
+        this.openPreferences(); // Native GNOME 45+ Extension API
+      }
+    );
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
     // 4. LIVE LISTENER: React to the user toggling the switch in Adwaita Prefs
