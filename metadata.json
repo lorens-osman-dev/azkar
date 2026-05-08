@@ -1,13 +1,18 @@
 {
   "name": "Azkar",
   "description": "A lightweight, distraction-free Azkar list in your GNOME panel",
-  "uuid": "azkar@gjs.guide",
+  "uuid": "azkar@lorens.com",
   "shell-version": [
-    "45",
     "46",
-    "47"
+    "47",
+    "48",
+    "49",
+    "50"
   ],
-  "url": "https://github.com/yourname/azkar",
+  "donations": {
+    "buymeacoffee": "lorens"
+  },
+  "url": "https://github.com/lorens-osman-dev/azkar",
   "settings-schema": "org.gnome.shell.extensions.azkar",
-  "gettext-domain": "azkar@gjs.guide"
+  "gettext-domain": "azkar@lorens.com"
 }

@@ -119,3 +119,5 @@ clean:
 	rm -rf _pack
 	rm -f  $(UUID).zip
 	rm -f  schemas/gschemas.compiled
+	rm -rf $(INSTALL)
+	@echo "🧹  Cleaned build artifacts and removed from $(INSTALL)"
