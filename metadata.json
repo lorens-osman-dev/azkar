@@ -1,6 +1,6 @@
 {
   "name": "Azkar",
-  "description": "A lightweight, distraction-free todo list in your GNOME panel",
+  "description": "A lightweight, distraction-free Azkar list in your GNOME panel",
   "uuid": "azkar@gjs.guide",
   "shell-version": [
     "45",

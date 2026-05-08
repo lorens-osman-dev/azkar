@@ -2,12 +2,12 @@
   "name": "azkar",
   "version": "1.0.0",
   "type": "module",
-  "description": "A lightweight GNOME Shell todo extension",
+  "description": "A lightweight GNOME Shell Azkar extension",
   "scripts": {
     "build": "make build",
     "pack": "make pack",
     "install": "make install",
-    "test": "make test 2>&1 | grep --color=always --line-buffered \"Azkar\"",
+    "test": "make clean && make test",
     "clean": "make clean"
   },
   "devDependencies": {
