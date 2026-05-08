@@ -1,11 +1,33 @@
-/* stylesheet.css — Azkar Extension
- */
-/* Base state: Adapts automatically to the user's Light/Dark mode panel text color */
-.azkar-indicator-icon {
-    /* No explicit color needed; inherits GNOME Shell's default foreground */
+/* Container spacing for the icon and label */
+.azkar-indicator-box {
+    spacing: 4px;
 }
 
-/* Active state: Applies Adwaita Native Success Green during playback */
+/* Pre-active state - Blue */
+.azkar-indicator-icon-pre-active {
+    color: #3584e4; 
+    transition-duration: 200ms;
+}
+
+/* Active state - Green */
 .azkar-indicator-icon-active {
-    color: #2ec27e;
+    color: #2ec27e; 
+    /* Subtle pulse animation for active state */
+    animation-name: azkar_pulse;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes azkar_pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Timer text styling */
+.azkar-indicator-timer {
+    font-size: 0.9em;
+    font-weight: bold;
+    /* Force monospaced tabular numbers to prevent UI jittering during countdown */
+    font-feature-settings: "tnum";
 }

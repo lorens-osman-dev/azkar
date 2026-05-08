@@ -114,6 +114,25 @@ export const AudioPlayer = GObject.registerClass({
   }
 
   /**
+   * Safely queries the GStreamer pipeline for remaining playback time.
+   * @returns Remaining time in seconds, or -1 if unknown/unavailable.
+   */
+  public getRemainingTime(): number {
+    if (!this._playbin) return -1;
+
+    // Gst.Format.TIME returns nanoseconds
+    const [durSuccess, durationNs] = this._playbin.query_duration(Gst.Format.TIME);
+    const [posSuccess, positionNs] = this._playbin.query_position(Gst.Format.TIME);
+
+    if (durSuccess && posSuccess && durationNs > 0) {
+      const remainingSeconds = (durationNs - positionNs) / 1_000_000_000;
+      return Math.max(0, Math.ceil(remainingSeconds));
+    }
+
+    return -1; // Fallback if GStreamer is still negotiating state
+  }
+
+  /**
    * Called during extension disable() to free resources.
    */
   public destroy(): void {

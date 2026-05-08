@@ -9,6 +9,7 @@ import Gtk from "gi://Gtk";
 import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
+
 export default class AzkarPreferences extends ExtensionPreferences {
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
     const settings = this.getSettings("org.gnome.shell.extensions.azkar");

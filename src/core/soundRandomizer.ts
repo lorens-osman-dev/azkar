@@ -1,16 +1,19 @@
 /**
  * core/soundRandomizer.ts — Randomized Audio Scheduler
- *
- * Responsibility:
- * - Schedule periodic non-repeating playback of bundled audio assets.
- * - Manage GLib source timers and GSettings state safely.
  */
 
 import GLib from "gi://GLib";
 import Gio from "gi://Gio";
 import { Logger } from "../utils/logger.js";
 import { AudioPlayer } from "./audioPlayer.js";
-import { getSoundsData, type SoundsData } from "./sounds.js";
+import { getSoundsData, type SoundsData, type SoundEntry } from "./sounds.js";
+
+export interface RandomizerListener {
+  onPreActive(sound: SoundEntry, timeUntilPlay: number): void;
+  onSoundStarted(sound: SoundEntry): void;
+  onSoundCompleted(sound: SoundEntry): void;
+  onRandomizerStopped(): void;
+}
 
 export class SoundRandomizer {
   private readonly _audioPlayer: InstanceType<typeof AudioPlayer>;
@@ -21,29 +24,32 @@ export class SoundRandomizer {
   private _timerId: number | null = null;
   private _isActive: boolean = false;
   private _settingsSignalId: number = 0;
+  private _listener: RandomizerListener | null = null;
+  private _upcomingSound: SoundEntry | null = null;
+  private _periodMinutes: number = 60;
+
+  private readonly PRE_ACTIVE_LEAD_TIME_SEC = 10;
 
   constructor(audioPlayer: InstanceType<typeof AudioPlayer>, extensionPath: string, settings: Gio.Settings) {
     this._audioPlayer = audioPlayer;
     this._settings = settings;
     this._soundsData = getSoundsData(extensionPath);
-
     this._resetQueue();
 
-    // Bind to GSettings to automatically restart the timer if the user changes the interval
     this._settingsSignalId = this._settings.connect('changed::scheduler-period', () => {
       if (this._isActive) {
-        Logger.info("Interval changed by user. Restarting scheduler pipeline...");
+        Logger.info("Interval changed. Restarting scheduler pipeline...");
         this.restart();
       }
     });
   }
 
-  /**
-   * Refills and shuffles the playlist to prevent repetitions.
-   */
+  public setListener(listener: RandomizerListener): void {
+    this._listener = listener;
+  }
+
   private _resetQueue(): void {
     this._unplayedSounds = [...this._soundsData.soundNames];
-
     // Fisher-Yates Shuffle
     for (let i = this._unplayedSounds.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -52,85 +58,102 @@ export class SoundRandomizer {
     }
   }
 
-  /**
-   * Reads the current period from GSettings and (re)starts the scheduling loop.
-   */
   public restart(): void {
     const periodMinutes = this._settings.get_int("scheduler-period");
     this.start(periodMinutes);
   }
 
   /**
-   * Starts the indefinite randomized scheduler.
-   * @param periodMinutes - Playback interval (1, 5, 10, 15, 30, 60)
+   * Manual start invoked by UI/Extension Init. Clears all existing state.
    */
   public start(periodMinutes: number): void {
-    this.stop(); // CLEANUP: Prevent duplicate timers from overlapping
-
+    this.stop();
     this._isActive = true;
-    const periodSeconds = periodMinutes * 60;
+    this._periodMinutes = periodMinutes;
 
-    Logger.info(`Scheduler started: playing random sound every ${periodMinutes} min.`);
-
-    // Schedule playback loop via GLib event loop
-    this._timerId = GLib.timeout_add_seconds(
-      GLib.PRIORITY_DEFAULT,
-      periodSeconds,
-      () => {
-        if (this._isActive) {
-          this._playNextSound();
-          return GLib.SOURCE_CONTINUE; // Reschedules the timer
-        }
-        return GLib.SOURCE_REMOVE;
-      },
-      null // FIX: Satisfy gi-ts DestroyNotify requirement
-    );
+    Logger.info(`Scheduler started: Next Azkar in ${periodMinutes} min.`);
+    this._scheduleIdleWait();
   }
 
   /**
-   * Halts the scheduler and stops active audio.
+   * Phase 1: Idle Wait (Period minus 10 seconds)
    */
+  private _scheduleIdleWait(): void {
+    const periodSeconds = this._periodMinutes * 60;
+    const waitTimeSeconds = Math.max(1, periodSeconds - this.PRE_ACTIVE_LEAD_TIME_SEC);
+
+    this._timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, waitTimeSeconds, () => {
+      if (!this._isActive) return GLib.SOURCE_REMOVE;
+
+      this._prepareNextSound();
+      this._schedulePreActive();
+
+      return GLib.SOURCE_REMOVE;
+    }, null);
+  }
+
+  /**
+   * Phase 2: Pre-Active Countdown (10 seconds)
+   */
+  private _schedulePreActive(): void {
+    this._timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this.PRE_ACTIVE_LEAD_TIME_SEC, () => {
+      if (!this._isActive) return GLib.SOURCE_REMOVE;
+
+      this._playPreparedSound();
+
+      // Start the next cycle's waiting period IMMEDIATELY, 
+      // but DO NOT call stop() on the currently playing audio!
+      this._scheduleIdleWait();
+
+      return GLib.SOURCE_REMOVE;
+    }, null);
+  }
+
   public stop(): void {
     this._isActive = false;
 
-    // CLEANUP: Unregister GLib source from the main event loop
+    // CLEANUP: Unregister GLib source
     if (this._timerId !== null) {
       GLib.Source.remove(this._timerId);
       this._timerId = null;
     }
 
     this._audioPlayer.stop();
+    if (this._listener) this._listener.onRandomizerStopped();
     Logger.info("Scheduler stopped.");
   }
 
-  private _playNextSound(): void {
-    if (this._unplayedSounds.length === 0) {
-      Logger.info("Deck empty. Reshuffling Azkar queue.");
-      this._resetQueue();
-    }
+  private _prepareNextSound(): void {
+    if (this._unplayedSounds.length === 0) this._resetQueue();
 
     const nextSoundName = this._unplayedSounds.pop();
     if (!nextSoundName) return;
 
-    const soundEntry = this._soundsData.sounds[nextSoundName];
-    Logger.info(`Scheduled Playback: ${soundEntry.soundName}`);
+    this._upcomingSound = this._soundsData.sounds[nextSoundName];
+    Logger.info(`Entering Pre-Active state. Scheduled: ${this._upcomingSound.soundName}`);
 
-    // Relative path for the AudioPlayer context
-    this._audioPlayer.play(`src/sounds/${soundEntry.soundFile}`);
+    if (this._listener) {
+      this._listener.onPreActive(this._upcomingSound, this.PRE_ACTIVE_LEAD_TIME_SEC);
+    }
   }
 
-  /**
-   * Called during extension disable() to free memory.
-   */
-  public destroy(): void {
-    // CLEANUP: Drop timers, disconnect GSettings signals, and flush arrays
-    this.stop();
+  private _playPreparedSound(): void {
+    if (!this._upcomingSound) return;
 
+    Logger.info(`Playback Started: ${this._upcomingSound.soundName}`);
+    if (this._listener) this._listener.onSoundStarted(this._upcomingSound);
+
+    this._audioPlayer.play(`src/sounds/${this._upcomingSound.soundFile}`);
+    this._upcomingSound = null; // Clear the buffer
+  }
+
+  public destroy(): void {
+    this.stop();
     if (this._settingsSignalId > 0) {
       this._settings.disconnect(this._settingsSignalId);
       this._settingsSignalId = 0;
     }
-
     this._unplayedSounds = [];
+    this._listener = null;
   }
 }
