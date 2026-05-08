@@ -1,4 +1,14 @@
 // Ambient declarations for GNOME Shell resource imports
+// Core GNOME Shell typings (you likely already have these)
+import "@girs/gjs";
+import "@girs/gjs/dom";
+import "@girs/gnome-shell/ambient";
+import "@girs/gnome-shell/extensions/global";
+
+// ─── Multimedia & File Typings ───
+// These lines map the `gi://Gst` and `gi://Gio` imports to their respective type definitions.
+import "@girs/gst-1.0/ambient";
+import "@girs/gio-2.0/ambient";
 // These map short import paths to the @girs packages
 
 declare module "resource:///org/gnome/shell/ui/panelMenu.js" {
@@ -33,6 +43,3 @@ declare var console: {
   error(...data: any[]): void;
 };
 
-declare module "resource:///org/gnome/shell/ui/dnd.js" {
-  export * from "@girs/gnome-shell/ui/dnd";
-}

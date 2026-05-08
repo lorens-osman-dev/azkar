@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "lib": ["ES2022"],
-    "types": [],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
@@ -13,7 +12,13 @@
     "strict": true,
     "skipLibCheck": true,
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    
+    // ─── GNOME Type Resolution ───
+    "typeRoots": [
+      "./node_modules/@types",
+      "./node_modules/@girs"
+    ]
   },
   "include": [
     "src/**/*.ts",

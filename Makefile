@@ -47,6 +47,11 @@ install: build schema
 	cp    metadata.json   $(INSTALL)/
 	cp    stylesheet.css  $(INSTALL)/
 	cp    assets/AZKAR-LOGO-300.svg $(INSTALL)/
+	
+	# MULTIMEDIA PIPELINE: Explicitly bundle sounds from the src/ directory
+	mkdir -p $(INSTALL)/src/sounds
+	cp -r src/sounds/* $(INSTALL)/src/sounds/
+	
 	mkdir -p $(INSTALL)/schemas
 	cp    schemas/*.xml              $(INSTALL)/schemas/
 	cp    schemas/gschemas.compiled  $(INSTALL)/schemas/
@@ -57,7 +62,6 @@ install: build schema
 
 # ── Pack (zip for distribution) ───────────────────────────────────────────────
 
-
 .PHONY: pack
 pack: build
 	rm -f $(UUID).zip
@@ -67,12 +71,19 @@ pack: build
 	cp metadata.json  _pack/
 	cp stylesheet.css _pack/
 	cp assets/AZKAR-LOGO-300.svg _pack/
+	
+	# MULTIMEDIA PIPELINE: Ensure audio assets are included in the release ZIP
+	mkdir -p _pack/src/sounds
+	cp -r src/sounds/* _pack/src/sounds/
+	
 	# STRICT PACKAGING: Only copy the raw XML schemas, EGO handles compilation
 	mkdir -p _pack/schemas
 	cp schemas/*.xml _pack/schemas/
 	cd _pack && zip -r ../$(UUID).zip .
 	rm -rf _pack
 	@echo "📦  Created $(UUID).zip"
+
+	
 # ── Test (nested Wayland session) ────────────────────────────────────────────
 #
 # GNOME 49+: uses --devkit
