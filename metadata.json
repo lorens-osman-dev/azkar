@@ -1,6 +1,6 @@
 {
   "name": "Azkar",
-  "description": "A lightweight, distraction-free Azkar list in your GNOME panel",
+  "description": "Azkar is a beautifully integrated GNOME Shell extension designed to enrich your daily workflow with spiritual mindfulness. It acts as a lightweight, background audio scheduler that periodically plays carefully selected Duas and Ayat from the Quran.",
   "uuid": "azkar@lorens.com",
   "shell-version": [
     "46",
