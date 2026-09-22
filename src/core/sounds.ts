@@ -22,11 +22,40 @@ export interface SoundsData {
 
 // Ensure these match the files bundled by the Makefile[cite: 3, 5].
 const BUNDLED_SOUNDS = [
-  "al_bahr.mp3", "al_balad.mp3", "al_rahman.mp3", "kaf.mp3",
-  "khazayen_1.mp3", "khazayen_2.mp3", "khazayen_3.mp3",
-  "mn_kan_yered_al_aza.mp3", "naziat.mp3", "noah.mp3",
-  "sabikon_al_sabikon.mp3", "sabr_gamil.mp3", "salat_ful.mp3",
-  "salat_tahajud.mp3", "salat.mp3", "w_asber.mp3", "yom_al_kiyama.mp3"
+  "al_bahr.mp3",
+  "al_balad.mp3",
+  "al_rahman.mp3",
+  "kaf.mp3",
+  "khazayen_1.mp3",
+  "khazayen_2.mp3",
+  "khazayen_3.mp3",
+  "mn_kan_yered_al_aza.mp3",
+  "naziat.mp3",
+  "noah.mp3",
+  "sabikon_al_sabikon.mp3",
+  "sabr_gamil.mp3",
+  "salat_ful.mp3",
+  "salat_tahajud.mp3",
+  "salat.mp3",
+  "w_asber.mp3",
+  "yom_al_kiyama.mp3",
+  "akhi1.mp3",
+  "akhi2.mp3",
+  "akhi3.mp3",
+  "akhi4.mp3",
+  "goraba1.mp3",
+  "goraba2.mp3",
+  "hamhama1.mp3",
+  "hamhama2.mp3",
+  "iza1_1.mp3",
+  "iza2_1.mp3",
+  "iza2_2.mp3",
+  "iza2_3.mp3",
+  "omati1.mp3",
+  "omati2.mp3",
+  "omati3.mp3",
+  "samedon1.mp3",
+  "samedon2.mp3",
 ];
 
 /**
@@ -37,7 +66,7 @@ export function getSoundsData(extensionPath: string): SoundsData {
 
   for (const file of BUNDLED_SOUNDS) {
     // Strip extension for the dictionary key
-    const name = file.replace('.mp3', '');
+    const name = file.replace(".mp3", "");
 
     // Safely construct the path via GLib
     const soundPath = GLib.build_filenamev([extensionPath, "src", "sounds", file]);
@@ -49,7 +78,7 @@ export function getSoundsData(extensionPath: string): SoundsData {
       soundName: name,
       soundFile: file,
       soundPath,
-      soundUri
+      soundUri,
     };
 
     data.soundNames.push(name);
