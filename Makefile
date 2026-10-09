@@ -119,7 +119,7 @@ test-devkit: install
 	@echo ""
 	MUTTER_DEBUG_DUMMY_MODE_SPECS="1280x720" \
 	G_MESSAGES_DEBUG=all \
-	dbus-run-session gnome-shell --devkit --wayland 2>&1 | grep  --line-buffered "$(EXTENSION_NAME)"
+	dbus-run-session gnome-shell --devkit  --wayland 2>&1 | grep  --line-buffered "$(EXTENSION_NAME)"
 
 .PHONY: testAndLog
 testAndLog: install
