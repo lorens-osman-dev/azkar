@@ -62,6 +62,10 @@ const BUNDLED_SOUNDS = [
   "kadar.mp3",
   "subhan.mp3",
   "ya_hay_ya_kayom.mp3",
+  "aboab_alsmaa.mp3",
+  "la_amlik.mp3",
+  "la_tkono.mp3",
+  "zakariya.mp3",
 ];
 
 /**
