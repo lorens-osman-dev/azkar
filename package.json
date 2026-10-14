@@ -4,11 +4,11 @@
   "type": "module",
   "description": "A lightweight GNOME Shell Azkar extension",
   "scripts": {
+    "clean": "make clean",
     "build": "make build",
-    "pack": "make pack",
     "install": "make install",
-    "test": "make clean && make test-devkit",
-    "clean": "make clean"
+    "pack": "make pack",
+    "test": "make clean && make test-devkit"
   },
   "devDependencies": {
     "@girs/gio-2.0": "2.88.0-4.0.0-rc.7",
