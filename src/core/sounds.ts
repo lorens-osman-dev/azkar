@@ -69,6 +69,7 @@ const BUNDLED_SOUNDS = [
   "garib_aldar.mp3",
   "lo_yo3agil.mp3",
   "sabrin.mp3",
+  "iza_masa.mp3",
 ];
 
 /**
