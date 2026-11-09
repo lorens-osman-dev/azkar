@@ -8,19 +8,28 @@
 </p>
 
 ## Philosophy
+
 Azkar is a beautifully integrated GNOME Shell extension designed to enrich your daily workflow with spiritual mindfulness. It acts as a lightweight, background audio scheduler that periodically plays carefully selected Duas and Ayat from the Quran.
 
-
-
-
-
-## Installation
+<!-- ## Installation
 
 To install the latest version of the extension head to the Official GNOME Extensions website.
 
 <a href="https://extensions.gnome.org/extension/7831/snap-todo/">
   <img height="80" src="assets/ego.png">
-</a>
+</a> -->
+
+### Install directly from GitHub
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/lorens-osman-dev/azkar/main/scripts/downloadAndInstall.sh | bash
+```
+
+Log out and back in after installing, then enable it using extension manager or:
+
+```sh
+gnome-extensions enable azkar@lorens.com
+```
 
 ## Support
 
