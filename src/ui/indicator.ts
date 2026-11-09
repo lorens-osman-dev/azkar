@@ -23,7 +23,7 @@ export const AzkarIndicator = GObject.registerClass(
     private _playbackTimerId: number | null = null;
 
     private _stoppedSignalId: number;
-    private _buttonPressSignalId: number;
+    private _capturedEventSignalId: number;
 
     private _settings: Gio.Settings;
     private _isIdle: boolean = true;
@@ -62,8 +62,8 @@ export const AzkarIndicator = GObject.registerClass(
       // Listen to AudioPlayer for unexpected stops (e.g., user manual stop)
       this._stoppedSignalId = this._audioPlayer.connect('playback-stopped', this._onPlaybackStopped.bind(this));
 
-      //: Bind the Clutter scene graph pointer event to detect right-clicks
-      this._buttonPressSignalId = this.connect('button-press-event', this._onButtonPress.bind(this));
+      // Intercept secondary clicks before PanelMenu.Button handles the event.
+      this._capturedEventSignalId = this.connect('captured-event', this._onCapturedEvent.bind(this));
 
       // Listen to live setting changes to update visibility immediately
       this._settingsSignalId = this._settings.connect('changed::hide-indicator-idle', () => {
@@ -77,12 +77,19 @@ export const AzkarIndicator = GObject.registerClass(
     /**
      * Intercepts pointer clicks before the panel menu processes them.
      */
-    private _onButtonPress(_actor: unknown, event: Clutter.Event): boolean {
-      // Button 3 is the universal Clutter definition for a secondary click (Right-Click)
-      if (event.get_button() === 3) {
-        this._openPrefsCallback();
+    private _onCapturedEvent(_actor: unknown, event: Clutter.Event): boolean {
+      const type = event.type();
+      if (type !== Clutter.EventType.BUTTON_PRESS && type !== Clutter.EventType.BUTTON_RELEASE) {
+        return Clutter.EVENT_PROPAGATE;
+      }
 
-        // Return EVENT_STOP (true) so the left-click dropdown menu doesn't open
+      if (event.get_button() === 3) {
+        if (type === Clutter.EventType.BUTTON_PRESS) {
+          this.menu.close();
+          this._openPrefsCallback();
+        }
+
+        // Consume both halves of the click; open Preferences only on press.
         return Clutter.EVENT_STOP;
       }
 
@@ -230,7 +237,7 @@ export const AzkarIndicator = GObject.registerClass(
       // CLEANUP: Disconnect all signals
       this._clearTimers();
       if (this._stoppedSignalId) this._audioPlayer.disconnect(this._stoppedSignalId);
-      if (this._buttonPressSignalId) this.disconnect(this._buttonPressSignalId);
+      if (this._capturedEventSignalId) this.disconnect(this._capturedEventSignalId);
 
       // NEW: Memory safe teardown of GSettings listener
       if (this._settingsSignalId) this._settings.disconnect(this._settingsSignalId);
