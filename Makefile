@@ -32,10 +32,10 @@ $(DIST)/extension.js $(DIST)/prefs.js: $(TS_SOURCES) tsconfig.json
 # ── Schema ────────────────────────────────────────────────────────────────────
 
 .PHONY: schema
-schema: schemas/gschemas.compiled
+schema: src/schemas/gschemas.compiled
 
-schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.azkar.gschema.xml
-	glib-compile-schemas schemas/
+src/schemas/gschemas.compiled: src/schemas/org.gnome.shell.extensions.azkar.gschema.xml
+	glib-compile-schemas src/schemas/
 
 # ── Install ───────────────────────────────────────────────────────────────────
 
@@ -57,8 +57,8 @@ install: build schema
 	cp    assets/moon-symbolic.svg           $(INSTALL)/assets/
 	
 	mkdir -p $(INSTALL)/schemas
-	cp    schemas/*.xml              $(INSTALL)/schemas/
-	cp    schemas/gschemas.compiled  $(INSTALL)/schemas/
+	cp    src/schemas/*.xml              $(INSTALL)/schemas/
+	cp    src/schemas/gschemas.compiled  $(INSTALL)/schemas/
 	@echo ""
 	@echo "✅  Installed to $(INSTALL)"
 	@echo "    → Log out and back in, then enable:"
@@ -86,7 +86,7 @@ pack: build
 	
 	# STRICT PACKAGING: Only copy the raw XML schemas, EGO handles compilation
 	mkdir -p _pack/schemas
-	cp schemas/*.xml _pack/schemas/
+	cp src/schemas/*.xml _pack/schemas/
 	cd _pack && zip -r ../$(UUID).zip .
 	rm -rf _pack
 	@echo "📦  Created $(UUID).zip"
@@ -147,6 +147,6 @@ clean:
 	rm -rf $(DIST)
 	rm -rf _pack
 	rm -f  $(UUID).zip
-	rm -f  schemas/gschemas.compiled
+	rm -f  src/schemas/gschemas.compiled
 	rm -rf $(INSTALL)
 	@echo "🧹  Cleaned build artifacts and removed from $(INSTALL)"

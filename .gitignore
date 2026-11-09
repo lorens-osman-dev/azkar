@@ -6,7 +6,7 @@ node_modules/
 dist/
 
 # Compiled GSettings schemas
-schemas/gschemas.compiled
+.srcschemas/gschemas.compiled
 
 # Packaging artifacts
 #_pack/
