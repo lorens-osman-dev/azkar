@@ -37,17 +37,19 @@ export default class AzkarPreferences extends ExtensionPreferences {
       title: "Enable Azkar player",
       subtitle: "When ON, plays a random Azkar sound repeatedly at your chosen time period.",
     });
-    settings.bind(
-      "scheduler-enabled",
-      enableRow as any,
-      "active",
-      Gio.SettingsBindFlags.DEFAULT
-    );
+    settings.bind("scheduler-enabled", enableRow as any, "active", Gio.SettingsBindFlags.DEFAULT);
     schedulerGroup.add(enableRow);
 
     // Row: Interval Dropdown
     const periods = [1, 5, 10, 15, 30, 60];
-    const periodLabels = ["1 Minute", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes", "1 Hour"];
+    const periodLabels = [
+      "1 Minute",
+      "5 Minutes",
+      "10 Minutes",
+      "15 Minutes",
+      "30 Minutes",
+      "1 Hour",
+    ];
     const model = Gtk.StringList.new(periodLabels);
 
     const intervalRow = new Adw.ComboRow({
@@ -71,16 +73,16 @@ export default class AzkarPreferences extends ExtensionPreferences {
     // Row: Hide Indicator Toggle
     const hideIdleRow = new Adw.SwitchRow({
       title: "Hide Extension Icon When Idle",
-      subtitle: "Hide the icon if there is no playing azkar, Icon only appears during pre-active (blue countdown) and active (green playing) states",
+      subtitle:
+        "Hide the icon if there is no playing azkar, Icon only appears during pre-active (blue countdown) and active (green playing) states",
     });
     settings.bind(
       "hide-indicator-idle",
       hideIdleRow as any,
       "active",
-      Gio.SettingsBindFlags.DEFAULT
+      Gio.SettingsBindFlags.DEFAULT,
     );
     schedulerGroup.add(hideIdleRow);
-
 
     // ─── Page: Azkar ───
     const azkarPage = new Adw.PreferencesPage({
@@ -91,7 +93,8 @@ export default class AzkarPreferences extends ExtensionPreferences {
 
     const soundsGroup = new Adw.PreferencesGroup({
       title: "Azkar sounds",
-      description: "Enable sounds to include them in the automatic playlist. Play any sound to preview it.",
+      description:
+        "Enable sounds to include them in the automatic playlist. Play any sound to preview it.",
     });
     azkarPage.add(soundsGroup);
 
@@ -111,10 +114,10 @@ export default class AzkarPreferences extends ExtensionPreferences {
       for (const name of soundNames) {
         const sound = sounds[name];
         const row = new Adw.ActionRow({
-          title: sound.soundFile,
+          title: sound.soundFile.replace(".mp3", ""),
           title_lines: 1,
           use_markup: false,
-          tooltip_text: sound.soundFile,
+          tooltip_text: sound.soundFile.replace(".mp3", ""),
         });
         const playButton = new Gtk.Button({
           icon_name: "media-playback-start-symbolic",
@@ -142,9 +145,12 @@ export default class AzkarPreferences extends ExtensionPreferences {
           const disabled = settings.get_strv("disabled-sounds");
           if (disabled.includes(sound.soundFile) === !playlistSwitch.active) return;
 
-          settings.set_strv("disabled-sounds", playlistSwitch.active
-            ? disabled.filter(file => file !== sound.soundFile)
-            : [...disabled, sound.soundFile]);
+          settings.set_strv(
+            "disabled-sounds",
+            playlistSwitch.active
+              ? disabled.filter((file) => file !== sound.soundFile)
+              : [...disabled, sound.soundFile],
+          );
         });
         playlistSwitches.set(sound.soundFile, playlistSwitch);
         row.add_suffix(playlistSwitch);
@@ -152,11 +158,13 @@ export default class AzkarPreferences extends ExtensionPreferences {
         soundsGroup.add(row);
       }
     } catch (error) {
-      soundsGroup.add(new Adw.ActionRow({
-        title: "Unable to load Azkar sounds",
-        subtitle: String(error),
-        use_markup: false,
-      }));
+      soundsGroup.add(
+        new Adw.ActionRow({
+          title: "Unable to load Azkar sounds",
+          subtitle: String(error),
+          use_markup: false,
+        }),
+      );
     }
 
     const playlist = createPlaylistPage(settings);
@@ -196,12 +204,12 @@ export default class AzkarPreferences extends ExtensionPreferences {
 
     const logoImage = new Gtk.Image({
       file: logoPath,
-      pixel_size: 128
+      pixel_size: 128,
     });
 
     logoBox.append(logoImage);
 
-    // FIX: Add the Image to the Box, the Box to the Group, and the Group to the Page
+    //  Add the Image to the Box, the Box to the Group, and the Group to the Page
     logoGroup.add(logoBox);
     aboutPage.add(logoGroup);
 

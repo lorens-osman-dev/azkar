@@ -8,7 +8,7 @@
     "build": "make build",
     "install": "make install",
     "pack": "make pack",
-    "test": "make clean && make test-devkit",
+    "dev": "make clean && make test-devkit",
     "test:prefs": "npm run build && bash tests/preferences.sh"
   },
   "devDependencies": {

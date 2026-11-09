@@ -27,10 +27,12 @@ export function createPlaylistPage(settings: Gio.Settings): {
     const addSound = (filename: string, status: string, icon: string, color?: string): void => {
       const title = GLib.markup_escape_text(filename, -1);
       const row = new Adw.ActionRow({
-        title: color ? `<span foreground="${color}">${title}</span>` : title,
+        title: color
+          ? `<span foreground="${color}">${title.replace(".mp3", "")}</span>`
+          : title.replace(".mp3", ""),
         subtitle: status,
         title_lines: 1,
-        tooltip_text: filename,
+        tooltip_text: filename.replace(".mp3", ""),
         use_markup: true,
       });
       row.add_prefix(new Gtk.Image({ icon_name: icon }));
@@ -39,19 +41,24 @@ export function createPlaylistPage(settings: Gio.Settings): {
     };
 
     if (!state) {
-      group.description = "Open this page while the Azkar extension is enabled to see its live queue.";
+      group.description =
+        "Open this page while the Azkar extension is enabled to see its live queue.";
       const row = new Adw.ActionRow({ title: "Waiting for the scheduler" });
       group.add(row);
       rows.push(row);
       return;
     }
 
-    if (state.previous) addSound(state.previous, "Previously played", "emblem-ok-symbolic", "#808080");
+    if (state.previous)
+      addSound(state.previous, "Previously played", "emblem-ok-symbolic", "#808080");
     if (state.current) addSound(state.current, "Playing now", "media-playback-start-symbolic");
     state.queue.forEach((filename, index) => {
-      addSound(filename, index === 0 ? "Next" : "Queued",
+      addSound(
+        filename,
+        index === 0 ? "Next" : "Queued",
         index === 0 ? "media-skip-forward-symbolic" : "audio-x-generic-symbolic",
-        index === 0 ? "#2e9b50" : "#3584e4");
+        index === 0 ? "#2e9b50" : "#3584e4",
+      );
     });
     if (state.queue.length === 0 && !state.current) {
       const row = new Adw.ActionRow({
