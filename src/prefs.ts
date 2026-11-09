@@ -12,6 +12,7 @@ import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/
 import { AudioPlayer } from "./core/audioPlayer.js";
 import { getSoundsData } from "./core/sounds.js";
 import { createPlaylistPage } from "./ui/playlistPage.js";
+import { setRtlRow } from "./ui/rtlRow.js";
 
 export default class AzkarPreferences extends ExtensionPreferences {
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
@@ -164,7 +165,9 @@ export default class AzkarPreferences extends ExtensionPreferences {
         });
         playlistSwitches.set(sound.soundFile, playlistSwitch);
         row.add_suffix(playlistSwitch);
+        row.add_css_class("playListTableRow");
         row.activatable_widget = playButton;
+        setRtlRow(row);
         soundsGroup.add(row);
       }
     } catch (error) {

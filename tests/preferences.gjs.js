@@ -17,6 +17,34 @@ function descendants(widget) {
     return result;
 }
 
+function assertRtlContents(row) {
+    for (const widget of descendants(row)) {
+        assert(widget.get_direction() === Gtk.TextDirection.RTL, `${widget.constructor.name} inside sound row must be RTL`);
+        if (widget instanceof Gtk.Label)
+            assert(widget.xalign === 0, 'RTL sound labels must use mirrored start alignment');
+    }
+}
+
+function assertMirroredLayout(row, control) {
+    row.allocate(720, 100, -1, null);
+    const label = descendants(row).find(widget => widget instanceof Gtk.Label && widget.get_text() === row.tooltip_text);
+    const [labelOk, labelBounds] = label.compute_bounds(row);
+    const [controlOk, controlBounds] = control.compute_bounds(row);
+    assert(labelOk && controlOk && controlBounds.get_x() + controlBounds.get_width() <= labelBounds.get_x(),
+        'RTL row controls must be to the left of the right-aligned sound title');
+}
+
+function assertTextAtRightEdge(row) {
+    row.allocate(720, 100, -1, null);
+    for (const label of descendants(row).filter(widget => widget instanceof Gtk.Label && widget.visible && widget.get_text())) {
+        const [layoutX] = label.get_layout_offsets();
+        const [, logical] = label.get_layout().get_pixel_extents();
+        const textRight = layoutX + logical.x + logical.width;
+        assert(Math.abs(textRight - label.get_width()) <= 2,
+            `Text must reach the right edge: ${label.get_text()} (text right=${textRight}, label width=${label.get_width()})`);
+    }
+}
+
 function assertTitleColor(row, hex) {
     const label = descendants(row).find(widget => widget instanceof Gtk.Label && widget.get_text() === row.tooltip_text);
     const color = label?.get_layout().get_attributes()?.get_iterator().get(Pango.AttrType.FOREGROUND)?.as_color().color;
@@ -75,8 +103,10 @@ app.connect('activate', () => {
         const rows = descendants(page).filter(widget => widget instanceof Adw.ActionRow);
         const manifest = getSoundsData(path);
         assert(rows.length === manifest.soundNames.length, 'Sound row count differs from the bundled MP3 manifest');
+        assert(rows.every(row => row.get_direction() === Gtk.TextDirection.RTL), 'Azkar sound rows must be RTL');
+        rows.forEach(assertRtlContents);
         for (const [index, row] of rows.entries()) {
-            const filename = manifest.sounds[manifest.soundNames[index]].soundFile;
+            const filename = manifest.sounds[manifest.soundNames[index]].soundFile.replace('.mp3', '');
             assert(row.title === filename, 'Filename/order mismatch');
             assert(row.title_lines === 1, 'Sound filenames must be ellipsized to one line');
             assert(!row.use_markup, 'Filenames must be literal text');
@@ -86,6 +116,9 @@ app.connect('activate', () => {
         assert(buttons.every(Boolean), 'Every sound needs a play button');
         const switches = rows.map(row => descendants(row).find(widget => widget instanceof Gtk.Switch));
         assert(switches.every(Boolean), 'Every sound needs a playlist enable/disable switch');
+        assertMirroredLayout(rows[0], buttons[0]);
+        assertMirroredLayout(rows[0], switches[0]);
+        rows.forEach(assertTextAtRightEdge);
         assert(switches.every(widget => widget.active), 'All sounds should be enabled by default');
         const settings = prefs.getSettings();
         const firstFile = manifest.sounds[manifest.soundNames[0]].soundFile;
@@ -117,11 +150,14 @@ app.connect('activate', () => {
         const initialQueue = [...scheduler._unplayedSounds].reverse().map(name => manifest.sounds[name].soundFile);
         assert(JSON.stringify(snapshot().queue) === JSON.stringify(initialQueue), 'Published queue must match actual pop order');
         assert(playlistRows().length === initialQueue.length, 'Playlist must display the complete queue');
+        assert(playlistRows().every(row => row.get_direction() === Gtk.TextDirection.RTL), 'Playlist sound rows must be RTL');
+        playlistRows().forEach(assertRtlContents);
+        playlistRows().forEach(assertTextAtRightEdge);
         assert(playlistRows()[0].subtitle === 'Next' && playlistRows()[0].title.includes('#2e9b50'), 'Immediate next track must be green');
         assert(playlistRows().slice(1).every(row => row.subtitle === 'Queued' && row.title.includes('#3584e4')), 'Remaining tracks must be blue');
         assertTitleColor(playlistRows()[0], '#2e9b50');
         assertTitleColor(playlistRows()[1], '#3584e4');
-        assert(playlistRows().every((row, index) => row.tooltip_text === initialQueue[index]), 'Rendered playlist order must match scheduler order');
+        assert(playlistRows().every((row, index) => row.tooltip_text === initialQueue[index].replace('.mp3', '')), 'Rendered playlist order must match scheduler order');
         scheduler._prepareNextSound();
         assert(snapshot().queue[0] === initialQueue[0], 'Countdown must keep the prepared sound at the head of the displayed queue');
         scheduler._playPreparedSound();
@@ -132,6 +168,7 @@ app.connect('activate', () => {
         assert(snapshot().previous === initialQueue[0], 'Completed playback must publish one history item');
         assert(playlistRows()[0].subtitle === 'Previously played' && playlistRows()[0].title.includes('#808080'), 'History must be gray');
         assertTitleColor(playlistRows()[0], '#808080');
+        playlistRows().forEach(assertRtlContents);
         scheduler._prepareNextSound();
         scheduler._playPreparedSound();
         scheduler._audioPlayer.stop();
@@ -203,8 +240,8 @@ app.connect('activate', () => {
         const published = publisherOutput[1].split('\n').find(line => line.startsWith('SNAPSHOT:')).slice('SNAPSHOT:'.length);
         await waitFor(() => settings.get_string('playback-queue') === published, 'Queue snapshot must synchronize across processes');
         const externalSnapshot = JSON.parse(published);
-        assert(playlistRows()[0].tooltip_text === externalSnapshot.previous, 'Cross-process history must render live');
-        assert(playlistRows()[1].tooltip_text === externalSnapshot.queue[0] && playlistRows()[1].subtitle === 'Next', 'Cross-process queue must keep next-track order');
+        assert(playlistRows()[0].tooltip_text === externalSnapshot.previous.replace('.mp3', ''), 'Cross-process history must render live');
+        assert(playlistRows()[1].tooltip_text === externalSnapshot.queue[0].replace('.mp3', '') && playlistRows()[1].subtitle === 'Next', 'Cross-process queue must keep next-track order');
         settings.reset('playback-queue');
         buttons[0].emit('clicked');
         await waitFor(() => player?._playbin.get_state(0)[1] === Gst.State.PLAYING, 'Preview did not reach PLAYING');

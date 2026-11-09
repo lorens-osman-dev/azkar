@@ -6,7 +6,7 @@ mkdir -p "$TMPDIR"
 stage=$(mktemp -d "$TMPDIR/azkar-prefs-test.XXXXXX")
 trap 'rm -rf "$stage"' EXIT
 cp -r dist/. "$stage/"
-cp metadata.json "$stage/"
+cp metadata.json src/stylesheet.css "$stage/"
 cp -r schemas assets "$stage/"
 mkdir -p "$stage/src"
 cp -r src/sounds "$stage/src/"

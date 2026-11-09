@@ -3,6 +3,7 @@ import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Gtk from "gi://Gtk";
 import { parsePlaylistSnapshot } from "../core/playlist.js";
+import { setRtlRow } from "./rtlRow.js";
 
 export function createPlaylistPage(settings: Gio.Settings): {
   page: Adw.PreferencesPage;
@@ -34,8 +35,11 @@ export function createPlaylistPage(settings: Gio.Settings): {
         title_lines: 1,
         tooltip_text: filename.replace(".mp3", ""),
         use_markup: true,
+        css_classes: ["titleStyle"],
       });
       row.add_prefix(new Gtk.Image({ icon_name: icon }));
+      row.add_css_class("playListTableRow");
+      setRtlRow(row);
       group.add(row);
       rows.push(row);
     };

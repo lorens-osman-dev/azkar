@@ -46,10 +46,10 @@
 
 /* Target the row directly, forcing override if Libadwaita theme takes precedence */
 row.playListTableRow {
-  direction: rtl;
 }
 
 /* If the internal content background covers the row background */
 row.playListTableRow > box {
-  direction: rtl;
+}
+.titleStyle {
 }
