@@ -33,6 +33,7 @@ const path = ARGV[0];
 const { default: Preferences } = await import(`file://${path}/prefs.js`);
 const { AudioPlayer } = await import(`file://${path}/core/audioPlayer.js`);
 const { getSoundsData } = await import(`file://${path}/core/sounds.js`);
+const { SoundRandomizer } = await import(`file://${path}/core/soundRandomizer.js`);
 Gst.init(null);
 // Exercise real GStreamer decoding without emitting sound on the user's desktop.
 const originalPlay = AudioPlayer.prototype.play;
@@ -71,6 +72,60 @@ app.connect('activate', () => {
         }
         const buttons = rows.map(row => descendants(row).find(widget => widget instanceof Gtk.Button && widget.icon_name === 'media-playback-start-symbolic'));
         assert(buttons.every(Boolean), 'Every sound needs a play button');
+        const switches = rows.map(row => descendants(row).find(widget => widget instanceof Gtk.Switch));
+        assert(switches.every(Boolean), 'Every sound needs a playlist enable/disable switch');
+        assert(switches.every(widget => widget.active), 'All sounds should be enabled by default');
+        const settings = prefs.getSettings();
+        const firstFile = manifest.sounds[manifest.soundNames[0]].soundFile;
+        const secondFile = manifest.sounds[manifest.soundNames[1]].soundFile;
+        switches[0].active = false;
+        assert(settings.get_strv('disabled-sounds').includes(firstFile), 'Disabling a sound must be saved');
+        assert(buttons[0].sensitive, 'Excluded sounds must remain available for preview');
+        settings.set_strv('disabled-sounds', [secondFile]);
+        assert(switches[0].active && !switches[1].active, 'External settings changes must update switches');
+        const reopened = new Adw.PreferencesWindow({ application: app });
+        await prefs.fillPreferencesWindow(reopened);
+        const reopenedPage = descendants(reopened).find(widget => widget instanceof Adw.PreferencesPage && widget.title === 'Azkar');
+        const reopenedSwitches = descendants(reopenedPage).filter(widget => widget instanceof Gtk.Switch);
+        assert(reopenedSwitches[0].active && !reopenedSwitches[1].active, 'Playlist choices must survive reopening Preferences');
+        reopened.emit('close-request');
+        reopened.destroy();
+        settings.reset('disabled-sounds');
+        assert(switches.every(widget => widget.active), 'Reset must enable all sounds');
+
+        const played = [];
+        const scheduler = new SoundRandomizer({ stop() {}, play(file) { played.push(file); } }, path, settings);
+        let preActive = 0;
+        scheduler.setListener({ onPreActive() { preActive++; }, onSoundStarted() {}, onRandomizerStopped() {} });
+        settings.set_strv('disabled-sounds', [firstFile]);
+        for (let i = 0; i < manifest.soundNames.length * 2; i++) {
+            scheduler._prepareNextSound();
+            scheduler._playPreparedSound();
+        }
+        assert(played.length > 0 && played.every(file => file !== `src/sounds/${firstFile}`), 'Scheduler must exclude disabled sounds across queue refills');
+        scheduler.start(15);
+        scheduler._prepareNextSound();
+        const pendingFile = scheduler._upcomingSound.soundFile;
+        settings.set_strv('disabled-sounds', [firstFile, pendingFile]);
+        const playedBeforeChange = played.length;
+        scheduler._playPreparedSound();
+        assert(played.length === playedBeforeChange, 'Disabling a pending sound must cancel it');
+        settings.set_strv('disabled-sounds', manifest.soundNames.map(name => manifest.sounds[name].soundFile));
+        const previousPreActive = preActive;
+        scheduler._prepareNextSound();
+        scheduler._playPreparedSound();
+        assert(preActive === previousPreActive && played.length === playedBeforeChange, 'An empty playlist must not count down or play stale audio');
+        scheduler.start(0);
+        const emptyPlaylistTimer = scheduler._timerId;
+        await waitFor(() => scheduler._timerId !== emptyPlaylistTimer, 'Empty-playlist idle timer did not run');
+        assert(preActive === previousPreActive && played.length === playedBeforeChange, 'Empty playlist must remain idle when its timer fires');
+        switches[0].active = true;
+        scheduler._prepareNextSound();
+        scheduler._playPreparedSound();
+        assert(played.at(-1) === `src/sounds/${firstFile}`, 'Re-enabling a sound must resume playlist selection');
+        scheduler.destroy();
+        assert(scheduler._playlistSignalId === 0 && scheduler._timerId === null, 'Scheduler cleanup must disconnect playlist changes and remove timers');
+        settings.reset('disabled-sounds');
         buttons[0].emit('clicked');
         await waitFor(() => player?._playbin.get_state(0)[1] === Gst.State.PLAYING, 'Preview did not reach PLAYING');
         assert(buttons[0].icon_name === 'media-playback-stop-symbolic', 'Playing sound needs a stop button');
@@ -88,7 +143,7 @@ app.connect('activate', () => {
         window.emit('close-request');
         assert(player._playbin === null, 'Closing Preferences must destroy the preview player');
         window.destroy();
-        print(`PASS: ${rows.length} sound rows, ellipsis, real decoding, switching, stop, EOS and window-close cleanup`);
+        print(`PASS: ${rows.length} sound rows, saved playlist switches, settings sync/reset/reopen, scheduler exclusions/refills/pending/empty/re-enable, and real preview playback/cleanup`);
     })().catch(error => { failure = error; }).finally(() => app.quit());
 });
 await app.runAsync([]);

@@ -24,6 +24,7 @@ export class SoundRandomizer {
   private _timerId: number | null = null;
   private _isActive: boolean = false;
   private _settingsSignalId: number = 0;
+  private _playlistSignalId: number = 0;
   private _listener: RandomizerListener | null = null;
   private _upcomingSound: SoundEntry | null = null;
   private _periodMinutes: number = 60;
@@ -42,6 +43,11 @@ export class SoundRandomizer {
         this.restart();
       }
     });
+    this._playlistSignalId = this._settings.connect('changed::disabled-sounds', () => {
+      this._upcomingSound = null;
+      this._resetQueue();
+      if (this._isActive) this.restart();
+    });
   }
 
   public setListener(listener: RandomizerListener): void {
@@ -49,7 +55,9 @@ export class SoundRandomizer {
   }
 
   private _resetQueue(): void {
-    this._unplayedSounds = [...this._soundsData.soundNames];
+    const disabled = new Set(this._settings.get_strv("disabled-sounds"));
+    this._unplayedSounds = this._soundsData.soundNames.filter(name =>
+      !disabled.has(this._soundsData.sounds[name].soundFile));
     // Fisher-Yates Shuffle
     for (let i = this._unplayedSounds.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -85,8 +93,11 @@ export class SoundRandomizer {
     this._timerId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, waitTimeSeconds, () => {
       if (!this._isActive) return GLib.SOURCE_REMOVE;
 
-      this._prepareNextSound();
-      this._schedulePreActive();
+      if (this._prepareNextSound()) {
+        this._schedulePreActive();
+      } else {
+        this._scheduleIdleWait();
+      }
 
       return GLib.SOURCE_REMOVE;
     }, null);
@@ -111,6 +122,7 @@ export class SoundRandomizer {
 
   public stop(): void {
     this._isActive = false;
+    this._upcomingSound = null;
 
     // CLEANUP: Unregister GLib source
     if (this._timerId !== null) {
@@ -123,11 +135,12 @@ export class SoundRandomizer {
     Logger.info("Scheduler stopped.");
   }
 
-  private _prepareNextSound(): void {
+  private _prepareNextSound(): boolean {
+    this._upcomingSound = null;
     if (this._unplayedSounds.length === 0) this._resetQueue();
 
     const nextSoundName = this._unplayedSounds.pop();
-    if (!nextSoundName) return;
+    if (!nextSoundName) return false;
 
     this._upcomingSound = this._soundsData.sounds[nextSoundName];
     Logger.info(`Entering Pre-Active state. Scheduled: ${this._upcomingSound.soundName}`);
@@ -135,6 +148,7 @@ export class SoundRandomizer {
     if (this._listener) {
       this._listener.onPreActive(this._upcomingSound, this.PRE_ACTIVE_LEAD_TIME_SEC);
     }
+    return true;
   }
 
   private _playPreparedSound(): void {
@@ -152,6 +166,10 @@ export class SoundRandomizer {
     if (this._settingsSignalId > 0) {
       this._settings.disconnect(this._settingsSignalId);
       this._settingsSignalId = 0;
+    }
+    if (this._playlistSignalId > 0) {
+      this._settings.disconnect(this._playlistSignalId);
+      this._playlistSignalId = 0;
     }
     this._unplayedSounds = [];
     this._listener = null;

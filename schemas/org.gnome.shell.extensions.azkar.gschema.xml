@@ -10,6 +10,12 @@
       <summary>Playback interval in minutes</summary>
     </key>
 
+    <key name="disabled-sounds" type="as">
+      <default>[]</default>
+      <summary>Sounds excluded from the automatic playlist</summary>
+      <description>Bundled sound filenames that should not be selected by the scheduler. All sounds are enabled by default.</description>
+    </key>
+
     <key name="hide-indicator-idle" type="b">
       <default>false</default>
       <summary>Hide indicator when idle</summary>

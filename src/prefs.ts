@@ -90,11 +90,12 @@ export default class AzkarPreferences extends ExtensionPreferences {
 
     const soundsGroup = new Adw.PreferencesGroup({
       title: "Azkar sounds",
-      description: "Play a sound to preview it. Only one preview plays at a time.",
+      description: "Enable sounds to include them in the automatic playlist. Play any sound to preview it.",
     });
     azkarPage.add(soundsGroup);
 
     const previewPlayer = new AudioPlayer(this.path);
+    const playlistSwitches = new Map<string, Gtk.Switch>();
     let activeButton: Gtk.Button | null = null;
     const stoppedSignalId = previewPlayer.connect("playback-stopped", () => {
       if (activeButton) {
@@ -131,6 +132,21 @@ export default class AzkarPreferences extends ExtensionPreferences {
           previewPlayer.play(`src/sounds/${sound.soundFile}`);
         });
         row.add_suffix(playButton);
+        const playlistSwitch = new Gtk.Switch({
+          active: !settings.get_strv("disabled-sounds").includes(sound.soundFile),
+          tooltip_text: "Include in automatic playlist",
+          valign: Gtk.Align.CENTER,
+        });
+        playlistSwitch.connect("notify::active", () => {
+          const disabled = settings.get_strv("disabled-sounds");
+          if (disabled.includes(sound.soundFile) === !playlistSwitch.active) return;
+
+          settings.set_strv("disabled-sounds", playlistSwitch.active
+            ? disabled.filter(file => file !== sound.soundFile)
+            : [...disabled, sound.soundFile]);
+        });
+        playlistSwitches.set(sound.soundFile, playlistSwitch);
+        row.add_suffix(playlistSwitch);
         row.activatable_widget = playButton;
         soundsGroup.add(row);
       }
@@ -142,7 +158,15 @@ export default class AzkarPreferences extends ExtensionPreferences {
       }));
     }
 
+    const playlistSignalId = settings.connect("changed::disabled-sounds", () => {
+      const disabled = new Set(settings.get_strv("disabled-sounds"));
+      for (const [filename, playlistSwitch] of playlistSwitches) {
+        playlistSwitch.active = !disabled.has(filename);
+      }
+    });
+
     window.connect("close-request", () => {
+      settings.disconnect(playlistSignalId);
       previewPlayer.destroy();
       previewPlayer.disconnect(stoppedSignalId);
       return false;
