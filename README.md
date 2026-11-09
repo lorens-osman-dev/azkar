@@ -3,9 +3,9 @@
 
 <p align="center"> <img src="assets/AZKAR-LOGO-300.svg" style="height: 200px !important;width: 200px !important;" > </p>
 
-<p align="center">
+<!-- <p align="center">
   <img src="https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fextensions.gnome.org%2Fextension%2F6768%2Flomotion%2F&query=%2Fhtml%2Fbody%2Fdiv%5B2%5D%2Fdiv%2Fdiv%5B2%5D%2Fdiv%5B1%5D%2Fspan%5B3%5D&logo=gnome&label=GNOME%20extensions&cacheSeconds=86400" alt="GNOME Extensions download">
-</p>
+</p> -->
 
 ## Philosophy
 
