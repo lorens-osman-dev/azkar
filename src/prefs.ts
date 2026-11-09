@@ -8,6 +8,8 @@ import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
 import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import { AudioPlayer } from "./core/audioPlayer.js";
+import { getSoundsData } from "./core/sounds.js";
 
 export default class AzkarPreferences extends ExtensionPreferences {
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
@@ -78,6 +80,73 @@ export default class AzkarPreferences extends ExtensionPreferences {
     );
     schedulerGroup.add(hideIdleRow);
 
+
+    // ─── Page: Azkar ───
+    const azkarPage = new Adw.PreferencesPage({
+      title: "Azkar",
+      icon_name: "audio-x-generic-symbolic",
+    });
+    window.add(azkarPage);
+
+    const soundsGroup = new Adw.PreferencesGroup({
+      title: "Azkar sounds",
+      description: "Play a sound to preview it. Only one preview plays at a time.",
+    });
+    azkarPage.add(soundsGroup);
+
+    const previewPlayer = new AudioPlayer(this.path);
+    let activeButton: Gtk.Button | null = null;
+    const stoppedSignalId = previewPlayer.connect("playback-stopped", () => {
+      if (activeButton) {
+        activeButton.icon_name = "media-playback-start-symbolic";
+        activeButton.tooltip_text = "Play sound";
+        activeButton = null;
+      }
+    });
+
+    try {
+      const { sounds, soundNames } = getSoundsData(this.path);
+      for (const name of soundNames) {
+        const sound = sounds[name];
+        const row = new Adw.ActionRow({
+          title: sound.soundFile,
+          title_lines: 1,
+          use_markup: false,
+          tooltip_text: sound.soundFile,
+        });
+        const playButton = new Gtk.Button({
+          icon_name: "media-playback-start-symbolic",
+          tooltip_text: "Play sound",
+          valign: Gtk.Align.CENTER,
+        });
+        playButton.add_css_class("flat");
+        playButton.connect("clicked", () => {
+          const wasPlaying = activeButton === playButton;
+          previewPlayer.stop();
+          if (wasPlaying) return;
+
+          activeButton = playButton;
+          playButton.icon_name = "media-playback-stop-symbolic";
+          playButton.tooltip_text = "Stop sound";
+          previewPlayer.play(`src/sounds/${sound.soundFile}`);
+        });
+        row.add_suffix(playButton);
+        row.activatable_widget = playButton;
+        soundsGroup.add(row);
+      }
+    } catch (error) {
+      soundsGroup.add(new Adw.ActionRow({
+        title: "Unable to load Azkar sounds",
+        subtitle: String(error),
+        use_markup: false,
+      }));
+    }
+
+    window.connect("close-request", () => {
+      previewPlayer.destroy();
+      previewPlayer.disconnect(stoppedSignalId);
+      return false;
+    });
 
     // ─── Page: About ───
     const aboutPage = new Adw.PreferencesPage({
