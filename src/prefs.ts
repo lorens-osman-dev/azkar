@@ -6,6 +6,7 @@
 import Adw from "gi://Adw";
 import Gio from "gi://Gio";
 import Gtk from "gi://Gtk";
+import Gdk from "gi://Gdk";
 import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import { AudioPlayer } from "./core/audioPlayer.js";
@@ -15,7 +16,16 @@ import { createPlaylistPage } from "./ui/playlistPage.js";
 export default class AzkarPreferences extends ExtensionPreferences {
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
     const settings = this.getSettings("org.gnome.shell.extensions.azkar");
-
+    const cssProvider = new Gtk.CssProvider();
+    const cssPath = this.dir.get_child("stylesheet.css").get_path();
+    if (cssPath) {
+      cssProvider.load_from_path(cssPath);
+      Gtk.StyleContext.add_provider_for_display(
+        Gdk.Display.get_default()!,
+        cssProvider,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+      );
+    }
     // ─── Resolve Asset Paths ───
     const logoPath = `${this.path}/assets/AZKAR-LOGO-300.svg`;
 

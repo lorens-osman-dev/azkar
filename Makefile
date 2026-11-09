@@ -45,7 +45,7 @@ install: build schema
 	# Recursively copy all files AND subdirectories from dist/
 	cp -r $(DIST)/* $(INSTALL)/
 	cp    metadata.json   $(INSTALL)/
-	cp    stylesheet.css  $(INSTALL)/
+	cp    src/stylesheet.css  $(INSTALL)/
 	
 	# MULTIMEDIA PIPELINE: Explicitly bundle sounds from the src/ directory
 	mkdir -p $(INSTALL)/src/sounds
@@ -73,7 +73,7 @@ pack: build
 	# Recursively copy all files AND subdirectories for the zip as well
 	cp -r $(DIST)/* _pack/
 	cp metadata.json  _pack/
-	cp stylesheet.css _pack/
+	cp src/stylesheet.css _pack/
 	
 	# MULTIMEDIA PIPELINE: Ensure audio assets are included in the release ZIP
 	mkdir -p _pack/src/sounds

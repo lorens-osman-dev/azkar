@@ -1,0 +1,55 @@
+/* Container spacing for the icon and label */
+.azkar-indicator-box {
+  spacing: 4px;
+}
+
+/* Pre-active state - Blue */
+.azkar-indicator-icon-pre-active {
+  color: #3584e4;
+  transition-duration: 200ms;
+}
+
+/* Active state - Green */
+.azkar-indicator-icon-active {
+  color: #2ec27e;
+  /* Subtle pulse animation for active state */
+  animation-name: azkar_pulse;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes azkar_pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Timer text styling */
+.azkar-indicator-timer {
+  font-size: 0.9em;
+  font-weight: bold;
+  font-feature-settings: "tnum";
+  min-width: 22px; /* Reserves exactly enough space for two digits */
+  text-align: center; /* Ensures a single digit stays centered in the reserved space */
+}
+
+.azkar-indicator-active-pill {
+  background-color: rgba(255, 255, 255, 0.12); /* Standard GNOME panel hover tint */
+  border-radius: 99px; /* Pill shape */
+}
+
+/* Target the row directly, forcing override if Libadwaita theme takes precedence */
+row.playListTableRow {
+  direction: rtl;
+}
+
+/* If the internal content background covers the row background */
+row.playListTableRow > box {
+  direction: rtl;
+}
