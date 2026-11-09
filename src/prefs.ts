@@ -10,6 +10,7 @@ import GObject from "gi://GObject";
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import { AudioPlayer } from "./core/audioPlayer.js";
 import { getSoundsData } from "./core/sounds.js";
+import { createPlaylistPage } from "./ui/playlistPage.js";
 
 export default class AzkarPreferences extends ExtensionPreferences {
   override fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
@@ -158,6 +159,9 @@ export default class AzkarPreferences extends ExtensionPreferences {
       }));
     }
 
+    const playlist = createPlaylistPage(settings);
+    window.add(playlist.page);
+
     const playlistSignalId = settings.connect("changed::disabled-sounds", () => {
       const disabled = new Set(settings.get_strv("disabled-sounds"));
       for (const [filename, playlistSwitch] of playlistSwitches) {
@@ -166,6 +170,7 @@ export default class AzkarPreferences extends ExtensionPreferences {
     });
 
     window.connect("close-request", () => {
+      playlist.disconnect();
       settings.disconnect(playlistSignalId);
       previewPlayer.destroy();
       previewPlayer.disconnect(stoppedSignalId);

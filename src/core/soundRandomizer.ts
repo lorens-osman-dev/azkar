@@ -7,6 +7,7 @@ import Gio from "gi://Gio";
 import { Logger } from "../utils/logger.js";
 import { AudioPlayer } from "./audioPlayer.js";
 import { getSoundsData, type SoundsData, type SoundEntry } from "./sounds.js";
+import type { PlaylistSnapshot } from "./playlist.js";
 
 export interface RandomizerListener {
   onPreActive(sound: SoundEntry, timeUntilPlay: number): void;
@@ -25,6 +26,9 @@ export class SoundRandomizer {
   private _isActive: boolean = false;
   private _settingsSignalId: number = 0;
   private _playlistSignalId: number = 0;
+  private _playbackStoppedSignalId: number;
+  private _previousSound: string | null = null;
+  private _currentSound: string | null = null;
   private _listener: RandomizerListener | null = null;
   private _upcomingSound: SoundEntry | null = null;
   private _periodMinutes: number = 60;
@@ -35,6 +39,13 @@ export class SoundRandomizer {
     this._audioPlayer = audioPlayer;
     this._settings = settings;
     this._soundsData = getSoundsData(extensionPath);
+    this._playbackStoppedSignalId = this._audioPlayer.connect('playback-stopped', () => {
+      if (this._currentSound) {
+        this._previousSound = this._currentSound;
+        this._currentSound = null;
+        this._publishQueue();
+      }
+    });
     this._resetQueue();
 
     this._settingsSignalId = this._settings.connect('changed::scheduler-period', () => {
@@ -64,6 +75,19 @@ export class SoundRandomizer {
       [this._unplayedSounds[i], this._unplayedSounds[j]] =
         [this._unplayedSounds[j], this._unplayedSounds[i]];
     }
+    this._publishQueue();
+  }
+
+  private _publishQueue(): void {
+    const queue = [...this._unplayedSounds].reverse().map(name => this._soundsData.sounds[name].soundFile);
+    if (this._upcomingSound) queue.unshift(this._upcomingSound.soundFile);
+    const snapshot: PlaylistSnapshot = {
+      active: this._isActive,
+      previous: this._previousSound,
+      current: this._currentSound,
+      queue,
+    };
+    this._settings.set_string("playback-queue", JSON.stringify(snapshot));
   }
 
   public restart(): void {
@@ -78,6 +102,7 @@ export class SoundRandomizer {
     this.stop();
     this._isActive = true;
     this._periodMinutes = periodMinutes;
+    this._publishQueue();
 
     Logger.info(`Scheduler started: Next Azkar in ${periodMinutes} min.`);
     this._scheduleIdleWait();
@@ -122,6 +147,7 @@ export class SoundRandomizer {
 
   public stop(): void {
     this._isActive = false;
+    if (this._upcomingSound) this._unplayedSounds.push(this._upcomingSound.soundName);
     this._upcomingSound = null;
 
     // CLEANUP: Unregister GLib source
@@ -131,6 +157,7 @@ export class SoundRandomizer {
     }
 
     this._audioPlayer.stop();
+    this._publishQueue();
     if (this._listener) this._listener.onRandomizerStopped();
     Logger.info("Scheduler stopped.");
   }
@@ -143,6 +170,7 @@ export class SoundRandomizer {
     if (!nextSoundName) return false;
 
     this._upcomingSound = this._soundsData.sounds[nextSoundName];
+    this._publishQueue();
     Logger.info(`Entering Pre-Active state. Scheduled: ${this._upcomingSound.soundName}`);
 
     if (this._listener) {
@@ -158,11 +186,15 @@ export class SoundRandomizer {
     if (this._listener) this._listener.onSoundStarted(this._upcomingSound);
 
     this._audioPlayer.play(`src/sounds/${this._upcomingSound.soundFile}`);
+    this._currentSound = this._upcomingSound.soundFile;
     this._upcomingSound = null; // Clear the buffer
+    if (this._unplayedSounds.length === 0) this._resetQueue();
+    else this._publishQueue();
   }
 
   public destroy(): void {
     this.stop();
+    this._audioPlayer.disconnect(this._playbackStoppedSignalId);
     if (this._settingsSignalId > 0) {
       this._settings.disconnect(this._settingsSignalId);
       this._settingsSignalId = 0;
@@ -173,5 +205,6 @@ export class SoundRandomizer {
     }
     this._unplayedSounds = [];
     this._listener = null;
+    this._settings.set_string("playback-queue", "");
   }
 }

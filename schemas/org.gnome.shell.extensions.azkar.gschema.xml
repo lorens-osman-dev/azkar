@@ -10,6 +10,12 @@
       <summary>Playback interval in minutes</summary>
     </key>
 
+    <key name="playback-queue" type="s">
+      <default>''</default>
+      <summary>Live playback queue snapshot</summary>
+      <description>Scheduler-published JSON containing the latest historical sound, current playback, and upcoming sounds in playback order.</description>
+    </key>
+
     <key name="disabled-sounds" type="as">
       <default>[]</default>
       <summary>Sounds excluded from the automatic playlist</summary>
