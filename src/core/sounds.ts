@@ -6,6 +6,7 @@
  * - Safely generate absolute paths and URIs for GStreamer ingestion.
  */
 
+import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 
 export interface SoundEntry {
@@ -20,72 +21,40 @@ export interface SoundsData {
   soundNames: string[];
 }
 
-// Ensure these match the files bundled by the Makefile[cite: 3, 5].
-const BUNDLED_SOUNDS = [
-  "al_bahr.mp3",
-  "al_balad.mp3",
-  "al_rahman.mp3",
-  "kaf.mp3",
-  "khazayen_1.mp3",
-  "khazayen_2.mp3",
-  "khazayen_3.mp3",
-  "mn_kan_yered_al_aza.mp3",
-  "naziat.mp3",
-  "noah.mp3",
-  "sabikon_al_sabikon.mp3",
-  "sabr_gamil.mp3",
-  "salat_ful.mp3",
-  "salat_tahajud.mp3",
-  "salat.mp3",
-  "w_asber.mp3",
-  "yom_al_kiyama.mp3",
-  "akhi1.mp3",
-  "akhi2.mp3",
-  "akhi3.mp3",
-  "akhi4.mp3",
-  "goraba1.mp3",
-  "goraba2.mp3",
-  "hamhama1.mp3",
-  "hamhama2.mp3",
-  //"iza1_1.mp3",
-  //"iza2_1.mp3",
-  //"iza2_2.mp3",
-  //"iza2_3.mp3",
-  //"omati1.mp3",
-  //"omati2.mp3",
-  //"omati3.mp3",
-  "samedon1.mp3",
-  //"samedon2.mp3",
-  "afant.mp3",
-  "al_rahman_1.mp3",
-  "gorabn.mp3",
-  "kadar.mp3",
-  "subhan.mp3",
-  "ya_hay_ya_kayom.mp3",
-  "aboab_alsmaa.mp3",
-  "la_amlik.mp3",
-  "la_tkono.mp3",
-  "zakariya.mp3",
-  "garib_aldar.mp3",
-  "lo_yo3agil.mp3",
-  "sabrin.mp3",
-  "iza_masa.mp3",
-];
-
 /**
- * Hydrates the audio manifest with safe system paths.
+ * Builds an audio manifest from the MP3 files bundled in src/sounds.
  */
 export function getSoundsData(extensionPath: string): SoundsData {
   const data: SoundsData = { sounds: {}, soundNames: [] };
+  const soundsDirectory = GLib.build_filenamev([extensionPath, "src", "sounds"]);
+  const directory = Gio.File.new_for_path(soundsDirectory);
+  const enumerator = directory.enumerate_children(
+    "standard::name,standard::type",
+    Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
+    null,
+  );
+  const files: string[] = [];
 
-  for (const file of BUNDLED_SOUNDS) {
-    // Strip extension for the dictionary key
-    const name = file.replace(".mp3", "");
+  try {
+    let fileInfo: Gio.FileInfo | null;
+    while ((fileInfo = enumerator.next_file(null)) !== null) {
+      const file = fileInfo.get_name();
+      if (fileInfo.get_file_type() === Gio.FileType.REGULAR && file.toLowerCase().endsWith(".mp3")) {
+        files.push(file);
+      }
+    }
+  } finally {
+    enumerator.close(null);
+  }
 
-    // Safely construct the path via GLib
-    const soundPath = GLib.build_filenamev([extensionPath, "src", "sounds", file]);
+  files.sort();
+  if (files.length === 0) {
+    throw new Error(`No MP3 sound files found in ${soundsDirectory}`);
+  }
 
-    // Generate the file:// URI for GStreamer
+  for (const file of files) {
+    const name = file.slice(0, -4);
+    const soundPath = GLib.build_filenamev([soundsDirectory, file]);
     const [soundUri] = GLib.filename_to_uri(soundPath, null);
 
     data.sounds[name] = {
